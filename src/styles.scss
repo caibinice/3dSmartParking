@@ -1,0 +1,8 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #081324; color: #e6edf8; font-family: Inter, 'Microsoft YaHei', system-ui, sans-serif; }
+button, input, select { font: inherit; }
+button, a, input, select { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #45e5d2; outline-offset: 3px; }
+button:disabled { opacity: .5; cursor: default; }
+a { color: inherit; }

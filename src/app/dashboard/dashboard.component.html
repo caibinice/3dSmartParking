@@ -1,0 +1,93 @@
+<div class="shell" [class.mobile]="mobile">
+  <header class="topbar">
+    <a class="brand" routerLink="/"><span class="brand-icon">P</span><span><b>智慧停车</b><small>SMART PARKING · DIGITAL TWIN</small></span></a>
+    <div class="site-title"><span class="live-dot"></span>某某中医院<span class="demo-badge">交互演示</span></div>
+    <nav aria-label="页面工具">
+      @if (!mobile) { <a routerLink="/mobile" class="subtle">手机版 ↗</a> }
+      @else { <a routerLink="/" class="subtle">桌面版</a> }
+      <button aria-label="使用说明" (click)="help.set(true)">?</button>
+      <button aria-label="全屏与横屏" (click)="fullscreen()">⛶</button>
+    </nav>
+  </header>
+
+  <section class="kpi-row" aria-label="停车概览">
+    <article><span>总泊位</span><strong>{{store.summary().capacity}}<small>个</small></strong><i>三大停车分区</i></article>
+    <article><span>当前在场</span><strong>{{store.summary().occupied}}<small>辆</small></strong><i>统一模拟数据源</i></article>
+    <article class="free-kpi"><span>可用泊位</span><strong>{{store.summary().free}}<small>个</small></strong><i>优先推荐 {{recommended().id}} 区</i></article>
+    <article><span>泊位利用率</span><strong>{{store.summary().rate}}<small>%</small></strong><div class="meter"><span [style.width.%]="store.summary().rate"></span></div></article>
+  </section>
+
+  <main class="workspace">
+    <aside class="left-panel" [class.open]="drawer()">
+      <section class="panel zones-panel">
+        <div class="panel-title"><h2>分区态势</h2><span>ZONE STATUS</span></div>
+        @for (zone of store.zones(); track zone.id) {
+          <button class="zone" [class.selected]="selected() === zone.id" (click)="selectZone(zone.id)">
+            <span class="zone-code" [style.color]="zone.color">{{zone.id}}</span>
+            <span class="zone-info"><b>{{zone.name}}</b><small>{{zone.occupied}} / {{zone.capacity}} 已占用</small><span class="meter"><span [style.background]="zone.color" [style.width.%]="zone.occupied/zone.capacity*100"></span></span></span>
+            <span class="zone-free">{{zone.capacity-zone.occupied}}<small>空位 ↗</small></span>
+          </button>
+        }
+        <p class="microcopy">点击区域卡片或场景中的定位点查看。模型泊位仅作比例示意。</p>
+      </section>
+      <section class="panel trend-panel">
+        <div class="panel-title"><h2>日内利用率</h2><span>示例曲线</span></div>
+        <div class="bar-chart" role="img" aria-label="模拟日内利用率柱形图">
+          @for (value of trend; track $index) { <span [style.height.%]="value"><i>{{value}}%</i></span> }
+        </div>
+        <div class="chart-labels"><span>06:00</span><span>12:00</span><span>18:00</span></div>
+      </section>
+      <section class="panel guide-panel">
+        <span class="eyebrow">PARKING GUIDE</span><h2>更快找到空余泊位</h2>
+        <p>{{recommended().name}}现有 <b>{{recommended().capacity-recommended().occupied}}</b> 个空位，点击进入区域视角。</p>
+        <button class="primary" (click)="selectZone(recommended().id)">定位 {{recommended().id}} 区 →</button>
+      </section>
+    </aside>
+
+    <section class="scene-panel" aria-label="园区三维场景">
+      <canvas #canvas aria-label="可旋转缩放的停车园区模型" tabindex="0"></canvas>
+      <div class="scene-heading"><span class="eyebrow">{{mobile ? 'LITE CAMPUS' : 'CAMPUS OVERVIEW'}}</span><h1>{{selectedZone()?.name || '园区全景'}}</h1><p>{{selectedZone() ? '区域视角 · 点击全景返回' : '某某医院 · 三维停车态势'}}</p></div>
+      @if (!ready()) {
+        <div class="loading"><span class="loader"></span><b>{{progress()}}</b><small>无需等待开场视频</small>@if(error()) { <button (click)="loadScene()">重新加载</button> }</div>
+      }
+      <div class="scene-legend"><span><i class="legend-free"></i>空位</span><span><i class="legend-car"></i>车辆</span><span><i class="legend-zone"></i>分区定位</span></div>
+      <div class="scene-status">{{status()}}</div>
+      <div class="view-controls">
+        @if (mobile) { <button (click)="drawer.set(!drawer())">分区</button> }
+        <button (click)="reset()" [class.active]="!selected()">全景</button>
+        <button (click)="top()">俯视</button>
+        <button (click)="toggleOrbit()" [class.active]="orbit()">{{orbit()?'停止巡航':'自动巡航'}}</button>
+        <button (click)="paused.set(!paused())" [class.active]="paused()">{{paused()?'继续演示':'暂停数据'}}</button>
+        <label><span class="sr-only">画质</span><select aria-label="画质档位" [(ngModel)]="quality" (change)="changeQuality()"><option value="auto">自动画质</option><option value="high">高清</option><option value="balanced">均衡</option><option value="low">低功耗</option></select></label>
+      </div>
+    </section>
+
+    <aside class="right-panel">
+      <section class="panel alarm-panel">
+        <div class="panel-title"><h2>运行提醒</h2><span class="count">{{activeAlarms()}} 待确认</span></div>
+        @for(alarm of store.alarms(); track alarm.id) {
+          <article class="alarm" [class.acknowledged]="alarm.acknowledged">
+            <span class="severity" [class.high]="alarm.level==='高'">{{alarm.level}}</span><div><b>{{alarm.title}}</b><small>{{alarm.zone}} 区 · {{alarm.acknowledged?'已确认':'模拟告警'}}</small></div>
+            <button (click)="selectZone(alarm.zone)" aria-label="定位告警区域">↗</button>
+            <button (click)="acknowledge(alarm.id)" [disabled]="alarm.acknowledged" [attr.aria-label]="'确认告警 '+alarm.id">✓</button>
+          </article>
+        }
+      </section>
+      <section class="panel events-panel">
+        <div class="panel-title"><h2>出入记录</h2><button (click)="exportEvents()">导出 ↗</button></div>
+        <input aria-label="筛选出入记录" placeholder="搜索模拟车牌 / 区域" [ngModel]="search()" (ngModelChange)="search.set($event)">
+        <div class="event-list">
+          @for(event of filteredEvents(); track event.id) {
+            <div class="event"><span class="event-arrow" [class.out]="event.action==='离场'">{{event.action==='入场'?'↓':'↑'}}</span><div><b>{{event.plate}}</b><small>{{event.time}} · {{event.zone}} 区</small></div><span>{{event.action}}</span></div>
+          } @empty { <p class="empty">没有匹配的模拟记录</p> }
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <footer><span><i class="live-dot"></i>{{paused()?'数据已暂停':'演示数据每 5 秒更新'}} · 某某公司</span><span class="performance">{{stats().backend}} · {{stats().fps}} FPS · {{stats().meshes}} Mesh · {{stats().quality}}</span><time>{{now().toLocaleString('zh-CN', {hour12:false})}}</time></footer>
+  @if(toast()) { <div class="toast" role="status">{{toast()}}</div> }
+  @if(help()) {
+    <div class="modal-backdrop" (click)="help.set(false)"><section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title" (click)="$event.stopPropagation()"><button class="close" (click)="help.set(false)" aria-label="关闭说明">×</button><span class="eyebrow">QUICK START</span><h2 id="help-title">探索三维停车园区</h2><ul><li>桌面：拖动旋转、滚轮缩放，右键拖动平移。</li><li>手机：单指旋转、双指缩放，点击分区定位。</li><li>竖屏自动显示横向工作台；点击全屏尝试锁定横屏。</li><li>自动画质限制像素密度，低帧率时降低分辨率。</li><li>当前为独立前端演示。指标、记录、告警均为模拟数据；没有接入真实门禁、摄像头或计费系统。</li></ul><div class="help-links"><a href="https://github.com/caibinice/3dSmartParking" target="_blank" rel="noopener noreferrer">项目源码 ↗</a><a href="https://caibinice.com/" target="_blank" rel="noopener noreferrer">Fish 的博客 ↗</a></div></section></div>
+  }
+</div>

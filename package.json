@@ -1,0 +1,37 @@
+{
+  "name": "3d-smart-parking",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "ng serve --host 127.0.0.1 --port 8699",
+    "build": "ng build --base-href /smartParking/",
+    "build:local": "ng build --base-href /",
+    "test": "tsx --test src/app/core/*.test.ts && node scripts/audit-assets.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "optimize:model": "node scripts/optimize-model.mjs"
+  },
+  "dependencies": {
+    "@angular/common": "21.2.25",
+    "@angular/compiler": "21.2.25",
+    "@angular/core": "21.2.25",
+    "@angular/forms": "21.2.25",
+    "@angular/platform-browser": "21.2.25",
+    "@angular/router": "21.2.25",
+    "@babylonjs/core": "9.29.0",
+    "@babylonjs/loaders": "9.29.0",
+    "rxjs": "~7.8.2",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@angular/build": "21.2.24",
+    "@angular/cli": "21.2.24",
+    "@angular/compiler-cli": "21.2.25",
+    "@gltf-transform/core": "^4.3.0",
+    "@gltf-transform/extensions": "^4.3.0",
+    "@gltf-transform/functions": "^4.3.0",
+    "meshoptimizer": "^1.0.1",
+    "tsx": "^4.20.0",
+    "typescript": "~5.9.3"
+  }
+}
