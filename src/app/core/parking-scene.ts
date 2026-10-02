@@ -22,11 +22,13 @@ import { PointerEventTypes } from '@babylonjs/core/Events/pointerEvents';
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 import '@babylonjs/core/Culling/ray';
 import { INITIAL_ZONES, Quality, resolutionScale, ZoneId, Zone } from './parking-data';
+import { nearestAngle, rollWheel, sampleRoute, tailCameraPose, type TrafficRoutes, type TrafficRoute, type VehicleRig } from './parking-traffic';
 
 export interface SceneStats { fps: number; meshes: number; backend: string; quality: string; renderWidth: number; renderHeight: number; }
 export interface ScenePin { id: ZoneId | 'vehicle'; x: number; y: number; visible: boolean; }
 export interface VehiclePick { parked: boolean; position: Vector3; index: number; }
 interface Flight { start: number; from: Vector3; to: Vector3; radiusFrom: number; radiusTo: number; betaFrom: number; betaTo: number; alphaFrom: number; alphaTo: number; }
+interface MovingVehicle { node: TransformNode; wheels: TransformNode[]; route: TrafficRoute; offset: number; speed: number; yaw: number; wheelAngle: number; previous?: Vector3; previousTime?: number; }
 
 export class ParkingScene {
   private engine?: AbstractEngine;
@@ -48,8 +50,10 @@ export class ParkingScene {
   private follow = false;
   private vehiclePaused = false;
   private vehicleTime = 0;
-  private route?: {duration:number;keyframes:number[][]};
-  private routeLine?:LinesMesh;
+  private fleet: MovingVehicle[] = [];
+  private rig?: VehicleRig;
+  private selectedTrafficIndex = 0;
+  private routeLines: LinesMesh[] = [];
   private flight?: Flight;
   private zones: Zone[] = structuredClone(INITIAL_ZONES);
   private removeTouch?: () => void;
@@ -110,35 +114,54 @@ export class ParkingScene {
     for (const mesh of campus.meshes) { mesh.isPickable = false; mesh.renderingGroupId=mesh.material?.name.includes('ground')?0:1; mesh.computeWorldMatrix(true); mesh.freezeWorldMatrix(); }
     this.styleMaterials();
     onProgress('实例化精细车辆…');
-    const [cars, placementResponse,routeResponse] = await Promise.all([
-      ImportMeshAsync(new URL(`models/vehicle-${suffix}-v2.glb`, document.baseURI).href, scene),
-      fetch(new URL('models/vehicle-placements-v2.json', document.baseURI)),
-      fetch(new URL('models/demo-route-v2.json', document.baseURI))
+    const [cars, placementResponse, routeResponse, rigResponse] = await Promise.all([
+      ImportMeshAsync(new URL(`models/vehicle-${suffix}-v3.glb`, document.baseURI).href, scene),
+      fetch(new URL('models/vehicle-placements-v3.json', document.baseURI)),
+      fetch(new URL('models/traffic-routes-v3.json', document.baseURI)),
+      fetch(new URL('models/vehicle-rig-v3.json', document.baseURI))
     ]);
     if (this.destroyed) return '';
-    if (!placementResponse.ok||!routeResponse.ok) throw new Error('Vehicle data failed');
+    if (!placementResponse.ok || !routeResponse.ok || !rigResponse.ok) throw new Error('Vehicle data failed');
     const placements = await placementResponse.json() as { matrices: number[][] };
-    this.route=await routeResponse.json();
-    this.routeLine=CreateLines('driving-route',{points:this.route!.keyframes.map(f=>new Vector3(f[1],.025,f[2]))},scene);
-    this.routeLine.color=new Color3(.09,.45,.65);this.routeLine.alpha=.7;this.routeLine.isPickable=false;this.routeLine.renderingGroupId=1;this.routeLine.setEnabled(false);
-    const matrices = new Float32Array(placements.matrices.flat());
-    this.vehicle = new TransformNode('moving-demo-vehicle', scene);
-    this.vehicle.scaling.setAll(.01);
-    this.vehicle.rotationQuaternion = Quaternion.RotationAxis(Vector3.Right(), Math.PI/2);
+    const traffic = await routeResponse.json() as TrafficRoutes;
+    this.rig = await rigResponse.json() as VehicleRig;
+    this.fleet = traffic.vehicles.map((definition, i) => {
+      const route = traffic.routes.find(r => r.id === definition.route)!;
+      const node = new TransformNode(`moving-vehicle-${i}`, scene);
+      node.scaling.setAll(this.rig!.scale);
+      const wheels = this.rig!.wheels.map(wheel => {
+        const pivot = new TransformNode(`moving-${i}-wheel-${wheel.id}`, scene);
+        pivot.parent = node; pivot.position.copyFromFloats(wheel.pivot[0], wheel.pivot[1], wheel.pivot[2]);
+        return pivot;
+      });
+      const line = CreateLines(`driving-route-${i}`, { points: route.keyframes.map(f => new Vector3(f[1], .025, f[2])) }, scene);
+      line.color = new Color3(.09, .45, .65); line.alpha = .7; line.isPickable = false; line.renderingGroupId = 1; line.setEnabled(false);
+      this.routeLines.push(line);
+      return { node, wheels, route, offset: definition.offset, speed: definition.speed, yaw: 0, wheelAngle: 0 };
+    });
+    this.vehicle = this.fleet[0].node;
     for(const mesh of cars.meshes) {
       if (!(mesh instanceof Mesh) || !mesh.getTotalVertices()) continue;
-      const moving = mesh.clone(`moving-${mesh.name}`, this.vehicle, true);
-      if (moving) {
-        moving.isPickable = true; moving.metadata = { vehicle: true,parked:false };
-        if(mesh.material instanceof PBRMaterial && mesh.material.name.includes('car-body')) {
-          const body = mesh.material.clone('demo-vehicle-body');
-          body.albedoColor = new Color3(.06,.65,.9); body.emissiveColor = new Color3(.005,.07,.12);
-          moving.material = body;
+      const templateMatrix = mesh.computeWorldMatrix(true).clone();
+      const wheelMatch = /wheel-(\d+)/.exec(mesh.name);
+      const wheelIndex = wheelMatch ? Number(wheelMatch[1]) : -1;
+      for (const [i, movingVehicle] of this.fleet.entries()) {
+        const moving = mesh.clone(`moving-${i}-${mesh.name}`, wheelIndex >= 0 ? movingVehicle.wheels[wheelIndex] : movingVehicle.node, true);
+        if (moving) {
+          moving.position.setAll(0); moving.scaling.setAll(1); moving.rotation.setAll(0); moving.rotationQuaternion = Quaternion.Identity();
+          moving.isPickable = true; moving.metadata = { vehicle: true, parked: false, trafficIndex: i }; moving.renderingGroupId = 1;
+          if (mesh.material instanceof PBRMaterial && mesh.material.name.includes('car-body')) {
+            const body = mesh.material.clone(`moving-${i}-body`);
+            body.albedoColor = [new Color3(.06,.65,.9), new Color3(.82,.87,.91), new Color3(.84,.46,.14)][i];
+            body.emissiveColor = new Color3(.005,.04,.06); moving.material = body;
+          }
         }
       }
+      // Parked wheels have local pivots; bake each part's local transform into its instance matrix.
+      const matrices = new Float32Array(placements.matrices.flatMap(matrix => Array.from(templateMatrix.multiply(Matrix.FromArray(matrix)).asArray())));
+      mesh.parent = null; mesh.position.setAll(0); mesh.scaling.setAll(1); mesh.rotation.setAll(0); mesh.rotationQuaternion = Quaternion.Identity();
       mesh.isPickable = true; mesh.thinInstanceEnablePicking = true; mesh.metadata = { vehicle: true,parked:true };
       mesh.renderingGroupId=1;
-      if(moving)moving.renderingGroupId=1;
       mesh.thinInstanceSetBuffer('matrix',matrices,16,true);
       mesh.alwaysSelectAsActiveMesh = true;
     }
@@ -235,7 +258,7 @@ export class ParkingScene {
     let start={x:0,y:0},moved=false;
     const coordinates=(e:PointerEvent)=>{const rect=this.canvas.getBoundingClientRect();return matchMedia('(orientation: portrait)').matches?{x:e.clientY-rect.top,y:rect.right-e.clientX}:{x:e.clientX-rect.left,y:e.clientY-rect.top};};
     const distance=()=>{const[a,b]=[...pointers.values()];return a&&b?Math.hypot(a.x-b.x,a.y-b.y):0;};
-    const down=(e:PointerEvent)=>{this.flight=undefined;const p=coordinates(e);pointers.set(e.pointerId,p);start=p;moved=false;this.canvas.setPointerCapture(e.pointerId);};
+    const down=(e:PointerEvent)=>{if(this.follow)return;this.flight=undefined;const p=coordinates(e);pointers.set(e.pointerId,p);start=p;moved=false;this.canvas.setPointerCapture(e.pointerId);};
     const move=(e:PointerEvent)=>{
       const old=pointers.get(e.pointerId);if(!old||!this.camera)return;
       const before=distance(),p=coordinates(e);pointers.set(e.pointerId,p);
@@ -251,37 +274,62 @@ export class ParkingScene {
   private overviewRadius() { const aspect=this.canvas.clientWidth/Math.max(1,this.canvas.clientHeight);return aspect<1.4?33:aspect>2.1?25:28; }
   private pickVehicle(pick:PickingInfo){
     if(!pick.pickedPoint)return;
-    this.onPick('vehicle',{parked:!!pick.pickedMesh?.metadata?.parked,position:pick.pickedPoint.clone(),index:pick.thinInstanceIndex});
+    const parked = !!pick.pickedMesh?.metadata?.parked;
+    this.onPick('vehicle',{parked,position:pick.pickedPoint.clone(),index:parked?pick.thinInstanceIndex:pick.pickedMesh!.metadata.trafficIndex});
   }
   private fly(to:Vector3,radius:number,beta=.85,alpha=this.camera?.alpha??-Math.PI/2) {
     if(!this.camera)return;
-    this.follow=false;this.orbit=false;
+    this.setFollowing(false);this.orbit=false;
+    this.clearCameraInertia();
     this.flight={start:performance.now(),from:this.camera.target.clone(),to,radiusFrom:this.camera.radius,radiusTo:radius,betaFrom:this.camera.beta,betaTo:beta,alphaFrom:this.camera.alpha,alphaTo:alpha};
   }
   private updateVehicle(delta:number) {
-    if(!this.vehicle||!this.route)return;
+    if(!this.fleet.length || !this.rig)return;
     if(!this.vehiclePaused)this.vehicleTime+=delta;
-    const time=this.vehicleTime%this.route.duration,frames=this.route.keyframes;
-    let index=0;while(index<frames.length-2&&frames[index+1][0]<time)index++;
-    const a=frames[index],b=frames[index+1],from=new Vector3(a[1],.012,a[2]),to=new Vector3(b[1],.012,b[2]);
-    this.vehicle.position.copyFrom(Vector3.Lerp(from,to,Math.max(0,Math.min(1,(time-a[0])/(b[0]-a[0])))));
-    const direction=to.subtract(from);
-    if(direction.lengthSquared()>.000001){
-      const yaw=Math.atan2(direction.x,direction.z);
-      this.vehicle.rotationQuaternion=Quaternion.RotationAxis(Vector3.Up(),yaw).multiply(Quaternion.RotationAxis(Vector3.Right(),Math.PI/2));
+    for (const moving of this.fleet) {
+      const pose = sampleRoute(moving.route, moving.offset + this.vehicleTime * moving.speed, moving.yaw);
+      moving.node.position.set(pose.x, .008, pose.z);
+      const distance = moving.previous ? Vector3.Distance(moving.previous, moving.node.position) : 0;
+      const wrapped = moving.previousTime !== undefined && pose.time < moving.previousTime;
+      if (!wrapped && distance < 1) moving.wheelAngle = rollWheel(moving.wheelAngle, distance, this.rig.wheels[0].radius * this.rig.scale);
+      moving.yaw = pose.yaw; moving.node.rotationQuaternion = Quaternion.RotationAxis(Vector3.Up(), moving.yaw);
+      for (const wheel of moving.wheels) wheel.rotationQuaternion = Quaternion.RotationAxis(Vector3.Right(), moving.wheelAngle);
+      moving.previous ??= new Vector3(); moving.previous.copyFrom(moving.node.position); moving.previousTime = pose.time;
     }
-    if(this.follow&&this.camera&&!this.flight){this.camera.setTarget(Vector3.Lerp(this.camera.target,this.vehicle.position.add(new Vector3(0,.12,0)),.12));}
+  }
+  private clearCameraInertia() {
+    if (!this.camera) return;
+    this.camera.inertialAlphaOffset = this.camera.inertialBetaOffset = this.camera.inertialRadiusOffset = 0;
+    this.camera.inertialPanningX = this.camera.inertialPanningY = 0;
+  }
+  private setFollowing(value: boolean) {
+    this.follow = value; this.clearCameraInertia();
+    if (!this.mobile && this.camera) { if (value) this.camera.detachControl(); else this.camera.attachControl(this.canvas, true); }
+  }
+  private tailPose() {
+    const moving = this.fleet[this.selectedTrafficIndex];
+    return tailCameraPose(moving.node.position.x, moving.node.position.y, moving.node.position.z, moving.yaw);
+  }
+  private applyTailCamera() {
+    if (!this.camera || !this.fleet.length) return;
+    const pose = this.tailPose();
+    this.camera.setTarget(Vector3.FromArray(pose.target));
+    this.camera.alpha = pose.alpha; this.camera.beta = pose.beta; this.camera.radius = pose.radius;
+    this.clearCameraInertia();
   }
   private render=()=>{
     if(!this.engine||!this.scene||!this.camera||this.destroyed||document.hidden)return;
     const now=performance.now(),interval=this.mobile||this.adaptiveCadence||this.quality==='low'?1000/30:1000/60;
     if(now-this.lastFrame<interval-1)return;
     const delta=this.lastFrame?Math.min((now-this.lastFrame)/1000,.1):0;this.lastFrame=now;
+    this.updateVehicle(delta);
     if(this.flight){const f=this.flight,t=Math.min(1,(now-f.start)/1050),e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+      if(this.follow){const pose=this.tailPose();f.to=Vector3.FromArray(pose.target);f.alphaTo=nearestAngle(f.alphaFrom,pose.alpha);f.radiusTo=pose.radius;f.betaTo=pose.beta;}
       this.camera.setTarget(Vector3.Lerp(f.from,f.to,e));this.camera.radius=f.radiusFrom+(f.radiusTo-f.radiusFrom)*e;this.camera.beta=f.betaFrom+(f.betaTo-f.betaFrom)*e;this.camera.alpha=f.alphaFrom+(f.alphaTo-f.alphaFrom)*e;if(t===1)this.flight=undefined;
     }
     if(this.orbit)this.camera.alpha+=delta*.065;
-    this.updateVehicle(delta);this.scene.render();this.renderedFrames++;
+    if(this.follow&&!this.flight)this.applyTailCamera();
+    this.scene.render();this.renderedFrames++;
     if(now-this.lastProjection>50){
       const viewport=this.camera.viewport.toGlobal(this.engine.getRenderWidth(),this.engine.getRenderHeight());
       const project=(id:ZoneId|'vehicle',position:Vector3):ScenePin=>{const p=Vector3.Project(position,Matrix.IdentityReadOnly,this.scene!.getTransformMatrix(),viewport);return{id,x:p.x/this.engine!.getRenderWidth()*this.canvas.clientWidth,y:p.y/this.engine!.getRenderHeight()*this.canvas.clientHeight,visible:p.z>0&&p.z<1&&p.x>0&&p.y>0&&p.x<viewport.width&&p.y<viewport.height};};
@@ -301,12 +349,17 @@ export class ParkingScene {
     this.engine?.setHardwareScalingLevel(resolutionScale(quality,this.mobile,window.devicePixelRatio,this.canvas.clientWidth,this.canvas.clientHeight));
     if(this.glow)this.glow.isEnabled=quality!=='low';
   }
-  setOrbit(value:boolean){this.flight=undefined;this.follow=false;this.orbit=value;}
+  setOrbit(value:boolean){this.flight=undefined;this.setFollowing(false);this.orbit=value;}
   setPaused(value:boolean){this.vehiclePaused=value;}
   focusZone(id:ZoneId){const zone=this.zones.find(z=>z.id===id);if(zone)this.fly(new Vector3(zone.position[0],.25,zone.position[1]),9,.65);}
-  focusVehicle(position?:Vector3){if(this.vehicle){this.fly(position??this.vehicle.position.clone(),1.6,.96);this.follow=!position;}}
-  showRoute(value:boolean){this.routeLine?.setEnabled(value);}
-  followVehicle(value:boolean){this.follow=value;this.orbit=false;this.flight=undefined;if(value&&this.camera){this.camera.radius=1.6;this.camera.beta=.96;}}
+  focusVehicle(position?:Vector3,index=0){
+    if(!this.fleet.length)return;
+    if(position){this.fly(position,1.6,.96);return;}
+    this.selectedTrafficIndex=Math.max(0,Math.min(this.fleet.length-1,index));this.vehicle=this.fleet[this.selectedTrafficIndex].node;
+    const pose=this.tailPose();this.fly(Vector3.FromArray(pose.target),pose.radius,pose.beta,nearestAngle(this.camera?.alpha??0,pose.alpha));this.setFollowing(true);
+  }
+  showRoute(value:boolean){this.routeLines.forEach((line,i)=>line.setEnabled(value&&i===this.selectedTrafficIndex));}
+  followVehicle(value:boolean){this.setFollowing(value);this.orbit=false;this.flight=undefined;if(value)this.applyTailCamera();}
   reset(){this.fly(new Vector3(0,.8,1.3),this.overviewRadius(),.79,-Math.PI/2);}
   top(){this.fly(new Vector3(0,0,1.3),this.overviewRadius()+1,.15,-Math.PI/2);}
   dispose(){this.destroyed=true;this.observer?.disconnect();this.removeTouch?.();document.removeEventListener('visibilitychange',this.onVisibility);this.engine?.stopRenderLoop();this.scene?.dispose();this.engine?.dispose();}

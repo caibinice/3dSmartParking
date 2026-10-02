@@ -12,6 +12,7 @@ type Panel = 'overview' | 'zones' | 'records' | 'alarms' | 'settings' | 'views' 
 export class DashboardComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('pins') pins!: ElementRef<HTMLElement>;
+  @ViewChild('openingVideo') openingVideo?: ElementRef<HTMLVideoElement>;
   readonly store=inject(ParkingStore);
   readonly mobile=inject(ActivatedRoute).snapshot.data['mobile']===true;
   readonly selected=signal<ZoneId|null>(null);
@@ -22,6 +23,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   readonly following=signal(false);
   readonly panel=signal<Panel>(null);
   readonly ready=signal(false);
+  readonly introDone=signal(false);
+  readonly introFailed=signal(false);
   readonly progress=signal('准备精细三维场景…');
   readonly status=signal('');
   readonly error=signal(false);
@@ -42,6 +45,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private scene?:ParkingScene;
   private timer?:ReturnType<typeof setInterval>;
   private toastTimer?:ReturnType<typeof setTimeout>;
+  private introTimer?:ReturnType<typeof setTimeout>;
   private disposed=false;
   async ngAfterViewInit(){
     for(let i=0;i<6;i++)this.store.advance();
@@ -50,24 +54,36 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     this.timer=setInterval(()=>{this.now.set(new Date());if(!this.paused()&&!document.hidden){this.store.advance();this.scene?.updateZones(this.store.zones());}},5000);
   }
   async loadScene(){
-    this.scene?.dispose();this.ready.set(false);this.error.set(false);
+    this.scene?.dispose();this.ready.set(false);this.error.set(false);this.introDone.set(false);this.introFailed.set(false);clearTimeout(this.introTimer);
     this.progress.set('准备精细三维场景…');
     try{
       const {ParkingScene}=await import('../core/parking-scene');
       if(this.disposed)return;
       this.scene=new ParkingScene(this.canvas.nativeElement,this.mobile,(id,vehicle)=>id==='vehicle'?this.selectVehicle(vehicle):this.selectZone(id),stats=>this.stats.set(stats),pins=>this.projectPins(pins));
       const status=await this.scene.init(value=>this.progress.set(value));
-      if(!this.disposed){this.scene.applyQuality(this.quality);this.status.set(status);this.ready.set(true);}
+      if(!this.disposed){
+        this.scene.applyQuality(this.quality);this.status.set(status);this.ready.set(true);
+        if(this.introFailed())this.finishIntro();
+        else this.introTimer=setTimeout(()=>this.finishIntro(),12000);
+      }
     }catch{
       if(!this.disposed){this.scene?.dispose();this.error.set(true);this.progress.set('精细模型加载中断，请检查网络后重试');}
     }
   }
+  playIntro(){const video=this.openingVideo?.nativeElement;if(!video)return;video.muted=true;void video.play().catch(()=>this.introUnavailable());}
+  loopIntro(){const video=this.openingVideo?.nativeElement;if(video&&!this.ready()&&!this.error()&&video.currentTime>=5.4)video.currentTime=.05;}
+  finishIntro(){
+    if(!this.ready()){const video=this.openingVideo?.nativeElement;if(video){video.currentTime=0;this.playIntro();}return;}
+    this.openingVideo?.nativeElement.pause();this.introDone.set(true);clearTimeout(this.introTimer);
+  }
+  introUnavailable(){this.introFailed.set(true);this.introDone.set(true);}
   private projectPins(pins:ScenePin[]){
     for(const pin of pins){const element=this.pins.nativeElement.querySelector<HTMLElement>(`[data-pin="${pin.id}"]`);if(!element)continue;element.style.transform=`translate(${pin.x.toFixed(1)}px,${pin.y.toFixed(1)}px) translate(-50%,-100%)`;element.style.visibility=pin.visible?'visible':'hidden';}
   }
   togglePanel(panel:Panel){this.panel.update(current=>current===panel?null:panel);this.clean.set(false);}
   selectZone(id:ZoneId){this.selected.set(id);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.focusZone(id);this.scene?.showRoute(false);this.panel.set(null);}
-  selectVehicle(vehicle?:VehiclePick){this.selected.set(null);this.vehicleSelected.set(true);this.parkedVehicle.set(vehicle?.parked??false);this.vehicleIndex.set((vehicle?.index??0)+1);this.following.set(!vehicle?.parked);this.orbit.set(false);this.panel.set(null);this.scene?.focusVehicle(vehicle?.parked?vehicle.position:undefined);this.scene?.showRoute(!vehicle?.parked);}
+  selectVehicle(vehicle?:VehiclePick,trafficIndex=0){this.selected.set(null);this.vehicleSelected.set(true);this.parkedVehicle.set(vehicle?.parked??false);this.vehicleIndex.set((vehicle?.index??trafficIndex)+1);this.following.set(!vehicle?.parked);this.orbit.set(false);this.panel.set(null);this.scene?.focusVehicle(vehicle?.parked?vehicle.position:undefined,vehicle?.index??trafficIndex);this.scene?.showRoute(!vehicle?.parked);}
+  nextVehicle(){this.selectVehicle(undefined,this.vehicleIndex()%3);}
   toggleFollow(){this.following.update(v=>!v);this.scene?.followVehicle(this.following());}
   reset(){this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.reset();this.scene?.showRoute(false);this.panel.set(null);}
   top(){this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.top();this.scene?.showRoute(false);this.panel.set(null);}
@@ -92,5 +108,5 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private message(value:string){this.toast.set(value);clearTimeout(this.toastTimer);this.toastTimer=setTimeout(()=>this.toast.set(''),3500);}
   closeVehicle(){this.vehicleSelected.set(false);this.following.set(false);this.scene?.followVehicle(false);this.scene?.showRoute(false);}
   @HostListener('document:keydown.escape')close(){this.help.set(false);this.panel.set(null);this.selected.set(null);this.closeVehicle();if(this.clean())this.clean.set(false);}
-  ngOnDestroy(){this.disposed=true;clearInterval(this.timer);clearTimeout(this.toastTimer);this.scene?.dispose();}
+  ngOnDestroy(){this.disposed=true;clearInterval(this.timer);clearTimeout(this.toastTimer);clearTimeout(this.introTimer);this.openingVideo?.nativeElement.pause();this.scene?.dispose();}
 }

@@ -2,7 +2,7 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const assets = [];
-for (const name of ['campus-desktop-v2', 'campus-mobile-v2', 'vehicle-desktop-v2', 'vehicle-mobile-v2']) {
+for (const name of ['campus-desktop-v2', 'campus-mobile-v2', 'vehicle-desktop-v3', 'vehicle-mobile-v3']) {
   const file = await readFile(`public/models/${name}.glb`);
   assert.equal(file.readUInt32LE(0), 0x46546c67, `${name}: invalid GLB header`);
   assert.equal(file.readUInt32LE(8), file.length, `${name}: truncated GLB`);
@@ -12,22 +12,37 @@ for (const name of ['campus-desktop-v2', 'campus-mobile-v2', 'vehicle-desktop-v2
   assert.ok(!/武进|常州|yanglin|taobao|license_plates|files-17/i.test(json), `${name}: legacy identity metadata`);
   assert.ok(file.length < 25 * 1024 * 1024, `${name}: exceeds asset budget`);
   assert.ok(!model.animations?.length, `${name}: static LOD should not contain source animation channels`);
+  if (name.startsWith('vehicle')) {
+    assert.equal(model.meshes.length, 5, `${name}: body and four rolling wheels must remain separate`);
+    assert.equal(model.nodes.filter(node => /vehicle-wheel-\d+$/.test(node.name)).length, 4, `${name}: wheel pivots are missing`);
+  }
   assets.push({ name, bytes: file.length, textures: model.images.length, meshes: model.meshes.length });
 }
 for (const prefix of ['campus', 'vehicle']) {
-  const desktop = assets.find(a => a.name === `${prefix}-desktop-v2`);
-  const mobile = assets.find(a => a.name === `${prefix}-mobile-v2`);
+  const version = prefix === 'campus' ? 'v2' : 'v3';
+  const desktop = assets.find(a => a.name === `${prefix}-desktop-${version}`);
+  const mobile = assets.find(a => a.name === `${prefix}-mobile-${version}`);
   assert.equal(desktop.textures, mobile.textures, `${prefix}: mobile must preserve the material layers`);
   assert.ok(mobile.bytes <= desktop.bytes, `${prefix}: mobile LOD exceeds desktop size`);
 }
-const placements = JSON.parse(await readFile('public/models/vehicle-placements-v2.json', 'utf8'));
+const placements = JSON.parse(await readFile('public/models/vehicle-placements-v3.json', 'utf8'));
 const report = JSON.parse(await readFile('public/models/asset-report-v2.json', 'utf8'));
 assert.ok(report.embeddedTextTrianglesRemoved > 100, 'Baked building text removal is missing');
 assert.equal(placements.matrices.length, 126, 'Original parked-vehicle layout should be retained');
 assert.ok(placements.matrices.every(m => m.length === 16 && m.every(Number.isFinite)), 'Invalid instance matrix');
-const route = JSON.parse(await readFile('public/models/demo-route-v2.json', 'utf8'));
-assert.ok(route.duration > 120 && route.keyframes.length > 200, 'Driving route is missing');
-assert.ok(route.keyframes.every((frame, i) => frame.length === 3 && frame.every(Number.isFinite) && (!i || frame[0] > route.keyframes[i - 1][0])), 'Invalid route keyframes');
+const rig = JSON.parse(await readFile('public/models/vehicle-rig-v3.json', 'utf8'));
+assert.equal(rig.forwardAxis, '+Z'); assert.equal(rig.upAxis, '+Y');
+assert.equal(rig.wheels.length, 4); assert.equal(rig.trianglesPreserved, 27360);
+assert.ok(rig.wheels.every(w => w.radius > 0 && w.pivot.length === 3 && w.pivot.every(Number.isFinite)));
+const traffic = JSON.parse(await readFile('public/models/traffic-routes-v3.json', 'utf8'));
+assert.equal(traffic.routes.length, 3); assert.equal(traffic.vehicles.length, 3);
+for (const route of traffic.routes) {
+  assert.ok(route.duration > 120 && route.keyframes.length > 600, 'Driving route is missing');
+  assert.ok(route.keyframes.every((frame, i) => frame.length === 3 && frame.every(Number.isFinite) && (!i || frame[0] > route.keyframes[i - 1][0])), 'Invalid route keyframes');
+}
+assert.ok(traffic.vehicles.every(v => traffic.routes.some(r => r.id === v.route) && Number.isFinite(v.offset) && v.speed > 0));
+const opening = await stat('public/media/opening-v3.mp4');
+assert.ok(opening.size > 1_000_000 && opening.size < 5_000_000, 'Opening video is missing or exceeds its budget');
 async function audit(dir) {
   for (const name of await readdir(dir)) {
     const path = `${dir}/${name}`;
@@ -39,4 +54,4 @@ async function audit(dir) {
 }
 await audit('src');
 console.table(assets.map(a => ({ ...a, MiB: (a.bytes / 1048576).toFixed(2) })));
-console.log('Asset/privacy audit passed: both LODs retain textures, 126 vehicles and the authored road route.');
+console.log('Asset/privacy audit passed: both LODs retain textures, 126 parked vehicles, four wheel pivots, three traffic routes and the opening video.');

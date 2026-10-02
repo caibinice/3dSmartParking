@@ -66,7 +66,7 @@ ln -sfn "$release" "$root/www.next"
 mv -Tf "$root/www.next" "$root/www"
 nginx -t
 systemctl reload nginx
-for path in /smartParking/ /smartParking/mobile /smartParking/models/campus-desktop-v2.glb /smartParking/models/campus-mobile-v2.glb /smartParking/models/vehicle-mobile-v2.glb /smartParking/models/vehicle-placements-v2.json /smartParking/models/demo-route-v2.json; do
+for path in /smartParking/ /smartParking/mobile /smartParking/models/campus-desktop-v2.glb /smartParking/models/campus-mobile-v2.glb /smartParking/models/vehicle-desktop-v3.glb /smartParking/models/vehicle-mobile-v3.glb /smartParking/models/vehicle-placements-v3.json /smartParking/models/vehicle-rig-v3.json /smartParking/models/traffic-routes-v3.json /smartParking/media/opening-v3.mp4; do
  curl -fsS --resolve caibinice.com:443:127.0.0.1 "https://caibinice.com$path" -o /dev/null
 done
 trap - ERR

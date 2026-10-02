@@ -9,7 +9,8 @@
     "build:local": "ng build --base-href /",
     "test": "tsx --test src/app/core/*.test.ts && node scripts/audit-assets.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "optimize:model": "node scripts/optimize-model.mjs"
+    "optimize:model": "node scripts/optimize-model.mjs",
+    "prepare:traffic": "node scripts/prepare-traffic.mjs"
   },
   "dependencies": {
     "@angular/common": "21.2.25",

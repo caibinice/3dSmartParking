@@ -19,8 +19,12 @@
     @for(zone of store.zones();track zone.id){<button class="scene-pin" [style.--pin-color]="zone.color" [attr.data-pin]="zone.id" [attr.aria-label]="'定位'+zone.name" [class.selected]="selected()===zone.id" (click)="selectZone(zone.id)"><span>{{zone.id}}</span><small>{{zone.name}}</small><i></i></button>}
     <button class="scene-pin vehicle-pin" data-pin="vehicle" aria-label="查看演示车辆" (click)="selectVehicle()"><span><svg><use href="#i-car"/></svg></span><small>演示车辆</small><i></i></button>
   </div>
-  @if(!ready()){
-    <div class="loading" role="status"><div class="loading-orbit"><span>P</span></div><b>{{progress()}}</b><small>保留真实建筑轮廓、道路纹理与精细车辆</small>@if(error()){<button class="primary" (click)="loadScene()">重新加载精细场景</button>}</div>
+  @if(!ready() || !introDone()){
+    <div class="loading" role="status">
+      <video #openingVideo class="loading-video" [class.unavailable]="introFailed()" src="media/opening-v3.mp4" poster="media/opening-v3.jpg" autoplay [muted]="true" playsinline preload="auto" aria-hidden="true" (loadeddata)="playIntro()" (timeupdate)="loopIntro()" (ended)="finishIntro()" (error)="introUnavailable()"></video>
+      @if(introFailed()){<div class="loading-orbit"><span>P</span></div>}
+      <div class="intro-progress"><b>{{ready()?'精细场景已就绪':progress()}}</b><small>{{ready()?'三辆巡行车 · 固定尾随视角':'保留真实建筑轮廓、道路纹理与精细车辆'}}</small>@if(ready()){<button (click)="finishIntro()">进入场景 ↗</button>}@if(error()){<button class="primary" (click)="loadScene()">重新加载精细场景</button>}</div>
+    </div>
   }
   @if(panel()){
     <aside class="floating-panel" role="dialog" aria-label="停车场功能面板">
@@ -61,7 +65,7 @@
     </aside>
   }
   @if(selectedZone();as zone){<section class="selection-card"><button class="close-button" (click)="selected.set(null)" aria-label="关闭分区信息">×</button><span class="eyebrow">{{zone.id}} ZONE · 模拟数据</span><h2>{{zone.name}}</h2><p><strong>{{zone.capacity-zone.occupied}}</strong> 空余泊位 <span>/ 共 {{zone.capacity}} 个</span></p><div><button (click)="reset()">返回全景</button><button (click)="togglePanel('overview')">查看统计 ↗</button></div></section>}
-  @if(vehicleSelected()){<section class="selection-card vehicle-card"><button class="close-button" (click)="closeVehicle()" aria-label="关闭车辆信息">×</button><span class="eyebrow">VEHICLE INSPECTION</span><h2>{{parkedVehicle()?'停放车辆 #'+vehicleIndex():'精细车辆交互'}}</h2><p class="vehicle-description">{{parkedVehicle()?'保留车身、轮胎与玻璃细节；拖动可环绕查看当前车辆。':'沿原始园区道路模拟巡行；可开启镜头跟随。'}}</p><div>@if(parkedVehicle()){<button (click)="selectVehicle()">查看巡行演示</button>}@else{<button (click)="toggleFollow()" [class.active]="following()">{{following()?'停止跟随':'跟随车辆'}}</button>}<button (click)="reset()">返回全景</button></div></section>}
+  @if(vehicleSelected()){<section class="selection-card vehicle-card"><button class="close-button" (click)="closeVehicle()" aria-label="关闭车辆信息">×</button><span class="eyebrow">VEHICLE INSPECTION</span><h2>{{parkedVehicle()?'停放车辆 #'+vehicleIndex():'巡行车辆 #'+vehicleIndex()}}</h2><p class="vehicle-description">{{parkedVehicle()?'保留车身、轮胎与玻璃细节；拖动可环绕查看当前车辆。':'三辆车沿原道路自动巡行，轮胎按行驶距离转动；镜头保持固定尾随距离与高度。'}}</p><div>@if(parkedVehicle()){<button (click)="selectVehicle()">查看巡行演示</button>}@else{<button (click)="toggleFollow()" [class.active]="following()">{{following()?'停止跟随':'跟随车辆'}}</button><button (click)="nextVehicle()">下一辆巡行车</button>}<button (click)="reset()">返回全景</button></div></section>}
   <nav class="scene-dock" aria-label="沉浸场景功能">
     <button (click)="togglePanel('overview')" [class.active]="panel()==='overview'" aria-label="打开停车态势"><svg><use href="#i-chart"/></svg><span>数据</span></button>
     <button (click)="togglePanel('zones')" [class.active]="panel()==='zones'" aria-label="打开停车分区"><svg><use href="#i-map"/></svg><span>分区</span></button>
