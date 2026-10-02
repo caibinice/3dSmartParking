@@ -24,7 +24,7 @@ if not stage.is_relative_to((ROOT / '.deploy').resolve()):
 target = stage / 'smartParking'
 shutil.copytree(source, target)
 for file in target.rglob('*'):
-    if file.is_file() and file.suffix in ('.js', '.css', '.glb', '.html', '.svg'):
+    if file.is_file() and file.suffix in ('.js', '.css', '.glb', '.html', '.svg', '.json'):
         with file.open('rb') as src, gzip.open(str(file) + '.gz', 'wb', compresslevel=9) as dst:
             shutil.copyfileobj(src, dst)
 archive = ROOT / '.deploy' / f'parking-{release}.tar.gz'
@@ -66,7 +66,7 @@ ln -sfn "$release" "$root/www.next"
 mv -Tf "$root/www.next" "$root/www"
 nginx -t
 systemctl reload nginx
-for path in /smartParking/ /smartParking/mobile /smartParking/models/campus-v1.glb; do
+for path in /smartParking/ /smartParking/mobile /smartParking/models/campus-desktop-v2.glb /smartParking/models/campus-mobile-v2.glb /smartParking/models/vehicle-mobile-v2.glb /smartParking/models/vehicle-placements-v2.json /smartParking/models/demo-route-v2.json; do
  curl -fsS --resolve caibinice.com:443:127.0.0.1 "https://caibinice.com$path" -o /dev/null
 done
 trap - ERR

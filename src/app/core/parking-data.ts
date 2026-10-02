@@ -3,9 +3,9 @@ export interface Zone { id: ZoneId; name: string; capacity: number; occupied: nu
 export interface ParkingEvent { id: number; plate: string; zone: ZoneId; action: '入场' | '离场'; time: string; }
 export interface Alarm { id: number; zone: ZoneId; title: string; level: '高' | '中' | '低'; acknowledged: boolean; }
 export const INITIAL_ZONES: Zone[] = [
-  { id: 'A', name: '门诊停车区', capacity: 120, occupied: 86, color: '#43dfc4', position: [-25, 18] },
-  { id: 'B', name: '住院停车区', capacity: 100, occupied: 62, color: '#64a7ff', position: [8, 22] },
-  { id: 'C', name: '急诊停车区', capacity: 80, occupied: 41, color: '#ad8aff', position: [32, 2] }
+  { id: 'A', name: '门诊停车区', capacity: 120, occupied: 86, color: '#43dfc4', position: [0, 2] },
+  { id: 'B', name: '住院停车区', capacity: 100, occupied: 62, color: '#64a7ff', position: [-7.5, 4.2] },
+  { id: 'C', name: '急诊停车区', capacity: 80, occupied: 41, color: '#ffbe6a', position: [9.2, .5] }
 ];
 export const INITIAL_ALARMS: Alarm[] = [
   { id: 1, zone: 'A', title: '入口排队超过预设阈值', level: '中', acknowledged: false },
@@ -28,7 +28,11 @@ export function advanceSimulation(zones: Zone[], tick: number): { zones: Zone[];
   };
 }
 export type Quality = 'auto' | 'high' | 'balanced' | 'low';
-export function resolutionScale(quality: Quality, mobile: boolean, dpr: number) {
-  const max = quality === 'high' ? 1.5 : quality === 'low' ? .75 : mobile ? 1 : 1.25;
-  return 1 / Math.min(Math.max(dpr, 1), max);
+export function resolutionScale(quality: Quality, mobile: boolean, dpr: number, width = 1280, height = 720) {
+  // Preserve native-resolution detail. Adaptive performance reduces cadence/effects,
+  // never silently renders a sub-native blurry canvas.
+  const desired = quality === 'low' ? 1 : quality === 'balanced' ? 1.5 : quality === 'high' ? Math.min(Math.max(dpr, 2), 2.5) : Math.min(Math.max(dpr, 2), 2);
+  const budget = mobile ? 4_000_000 : 8_000_000;
+  const ratio = Math.max(1, Math.min(desired, Math.sqrt(budget / Math.max(1, width * height))));
+  return 1 / ratio;
 }

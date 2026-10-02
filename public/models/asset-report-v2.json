@@ -1,0 +1,31 @@
+{
+  "sourceBytes": 164807820,
+  "parkedVehicleInstances": 126,
+  "embeddedTextTrianglesRemoved": 3883,
+  "assets": [
+    {
+      "name": "campus-desktop-v2",
+      "bytes": 18953916,
+      "vertices": 346842,
+      "textures": 18
+    },
+    {
+      "name": "campus-mobile-v2",
+      "bytes": 16444988,
+      "vertices": 298797,
+      "textures": 18
+    },
+    {
+      "name": "vehicle-desktop-v2",
+      "bytes": 1416044,
+      "vertices": 21230,
+      "textures": 7
+    },
+    {
+      "name": "vehicle-mobile-v2",
+      "bytes": 1357092,
+      "vertices": 19842,
+      "textures": 7
+    }
+  ]
+}

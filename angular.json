@@ -35,7 +35,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "15kB",
+                  "maximumWarning": "18kB",
                   "maximumError": "25kB"
                 }
               ]
@@ -50,6 +50,7 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": { "prebundle": { "exclude": ["@babylonjs/core", "@babylonjs/loaders"] } },
           "configurations": {
             "production": {
               "buildTarget": "parking:build:production"

@@ -15,7 +15,18 @@ test('simulation preserves capacity bounds and one-car conservation', () => {
 });
 test('empty metrics and bounded resolution', () => {
   assert.equal(totals([]).rate, 0);
-  assert.equal(resolutionScale('high', false, 3), 1 / 1.5);
-  assert.equal(resolutionScale('auto', true, 3), 1);
-  assert.ok(resolutionScale('low', true, 3) > 1);
+  assert.equal(resolutionScale('high', false, 3), 1 / 2.5);
+  assert.equal(resolutionScale('auto', true, 3), .5);
+  assert.equal(resolutionScale('balanced', true, 3), 1 / 1.5);
+  assert.equal(resolutionScale('low', true, 3), 1);
+});
+test('pixel budgets retain at least native resolution on large screens', () => {
+  for (const mobile of [true, false]) {
+    for (const quality of ['auto', 'high', 'balanced', 'low'] as const) {
+      const scale = resolutionScale(quality, mobile, 4, 1920, 1080);
+      assert.ok(scale <= 1 && scale >= .4);
+      assert.ok(1920 * 1080 / scale ** 2 <= (mobile ? 4_000_000 : 8_000_000) + 1);
+      assert.equal(resolutionScale(quality, mobile, 4, 3840, 2160), 1);
+    }
+  }
 });
