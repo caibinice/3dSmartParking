@@ -34,6 +34,7 @@ remote = RemoteClient()
 try:
     remote.upload_file(archive, f'/tmp/{archive.name}', 0o600)
     remote.upload_file(ROOT / 'deploy' / 'nginx-location.conf', '/tmp/parking-nginx-location.conf', 0o600)
+    remote.upload_file(ROOT / 'scripts' / 'update-nginx-routes.py', '/tmp/update-parking-nginx.py', 0o600)
     print(remote.run(f'''
 set -euo pipefail
 root=/opt/3d-smart-parking
@@ -52,16 +53,7 @@ rollback() {{
     nginx -t && systemctl reload nginx
 }}
 trap rollback ERR
-if ! grep -q 'smart-parking-static-app' "$config"; then cat /tmp/parking-nginx-location.conf >> "$config"; fi
-if ! grep -q 'location = /smartParking/index.html' "$config"; then
- cat >> "$config" <<'NGINX'
-    location = /smartParking/index.html {{
-        root /opt/3d-smart-parking/www;
-        expires -1;
-        gzip_static on;
-    }}
-NGINX
-fi
+python3 /tmp/update-parking-nginx.py "$config" /tmp/parking-nginx-location.conf
 ln -sfn "$release" "$root/www.next"
 mv -Tf "$root/www.next" "$root/www"
 nginx -t
@@ -70,7 +62,7 @@ for path in /smartParking/ /smartParking/mobile /smartParking/models/campus-desk
  curl -fsS --resolve caibinice.com:443:127.0.0.1 "https://caibinice.com$path" -o /dev/null
 done
 trap - ERR
-rm -f /tmp/{archive.name} /tmp/parking-nginx-location.conf
+rm -f /tmp/{archive.name} /tmp/parking-nginx-location.conf /tmp/update-parking-nginx.py
 echo 'Parking release activated: {release}'
 echo "Rollback: $backup; previous release: $previous"
 ''', root=True, timeout=180))

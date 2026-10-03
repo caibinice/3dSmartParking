@@ -7,6 +7,8 @@ Angular 21 + Babylon.js 9 的全屏沉浸式前端演示。桌面与手机使用
 - [源码](https://github.com/caibinice/3dSmartParking)
 - [优化记录](docs/optimization-plan.md)
 - [验证记录](docs/test-results.md)
+- [智能体业务流程、架构与拓展方案](docs/parking-agent-design.md)
+- [智能助手联调与发布验证](docs/parking-agent-validation.md)
 
 ## 本地运行
 
@@ -23,6 +25,23 @@ npm run build
 ```
 
 生产 base 路径为 `/smartParking/`；根路径静态预览使用 `npm run build:local`。
+
+`npm start` 通过 `proxy.conf.json` 将 `/smartCockpit/api/**` 代理到现有线上座舱服务；本地调试仍验证座舱操作密码。离线联调可把代理目标改为同一座舱的本地地址（后端路径需要去掉 `/smartCockpit` 前缀）。模型密钥、SSH 密码和操作密码都不进入前端构建。
+
+## 停车智能助手
+
+点击右下角“停车助手”，验证原企业智能座舱操作密码后，可使用文字或语音请求：
+
+- “查看停车报表”“推荐停车区”“查看出入记录”“查看运行告警”。
+- “定位门诊停车区”“切换俯视”“跟随巡行车”。
+- “开始园区导览”，随后可暂停、继续或结束；手动拖动镜头自动暂停导览。
+- 自由组合请求，例如“展示急诊区，并列出当前告警”。
+
+助手默认隐藏，打开不缩小画布；后端复用 `enterprise-ai-cockpit` 原有服务，Flash + thinking max 为默认，Pro 为可选。新独立停车知识库需要由受保护的 `POST /smartCockpit/api/parking-agent/knowledge/bootstrap` 幂等初始化。
+
+“语音”一次识别一句；“语音唤醒”需要主动开启并同意浏览器麦克风权限，再说“你好停车助手”。浏览器识别服务可能使用云端音频处理；识别 API 未提供或网络中断时可继续使用文字与按钮。隐藏面板时有监听指示，停止播报可立即打断；页面切入后台关闭监听。没有调用座舱原有模拟音频接口。
+
+所有报表带模拟来源与采样时刻，程序计算数值，模型只规划白名单工具；当前不发送抬杆、收费、医疗或停车设备指令。
 
 ## 沉浸交互
 
@@ -59,6 +78,8 @@ npm run build
 - `src/app/core/parking-scene.ts`：资产、渲染、相机飞行、实例拾取、触控与释放。
 - `src/app/core/parking-traffic.ts`：轨迹插值、方向、距离驱动轮胎和固定尾随相机的纯函数。
 - `src/app/dashboard/`：全屏场景界面与按需信息浮层。
+- `src/app/assistant/`：座舱 SSE 客户端、可隐藏助手、用户主动开启的浏览器语音。
+- `src/app/core/parking-agent.ts`：场景工具、有限导览、快照和双重协议校验。
 - `scripts/optimize-model.mjs`：从外部原始资产生成桌面/手机 LOD、实例矩阵和道路轨迹。
 - `scripts/prepare-traffic.mjs`：将车模规范到 +Z 前向/+Y 向上，拆出四个轮胎及轮毂，生成 v3 车模、实例矩阵和三条巡行轨迹。
 - `scripts/audit-assets.mjs`：纹理保留、名称脱敏、体积、实例与轨迹契约。

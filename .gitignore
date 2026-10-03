@@ -45,3 +45,6 @@ credentials*.txt
 .playwright-cli/
 *.png
 !docs/images/*.png
+
+__pycache__/
+*.pyc

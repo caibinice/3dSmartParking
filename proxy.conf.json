@@ -1,0 +1,7 @@
+{
+  "/smartCockpit/api/**": {
+    "target": "https://caibinice.com",
+    "secure": true,
+    "changeOrigin": true
+  }
+}

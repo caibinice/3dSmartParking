@@ -4,15 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { ParkingStore } from '../core/parking-store';
 import { Quality, ZoneId } from '../core/parking-data';
 import type { ParkingScene, SceneStats, ScenePin, VehiclePick } from '../core/parking-scene';
+import { ParkingAssistantComponent, type TourState } from '../assistant/parking-assistant.component';
+import { CAMPUS_TOUR, parseAgentAction, snapshot, type AgentAction } from '../core/parking-agent';
 type Panel = 'overview' | 'zones' | 'records' | 'alarms' | 'settings' | 'views' | null;
 @Component({
-  selector: 'app-dashboard', imports: [RouterLink, FormsModule],
+  selector: 'app-dashboard', imports: [RouterLink, FormsModule, ParkingAssistantComponent],
   templateUrl: './dashboard.component.html', styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('pins') pins!: ElementRef<HTMLElement>;
   @ViewChild('openingVideo') openingVideo?: ElementRef<HTMLVideoElement>;
+  @ViewChild(ParkingAssistantComponent) assistant?: ParkingAssistantComponent;
   readonly store=inject(ParkingStore);
   readonly mobile=inject(ActivatedRoute).snapshot.data['mobile']===true;
   readonly selected=signal<ZoneId|null>(null);
@@ -37,6 +40,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   readonly showPins=signal(true);
   readonly toast=signal('');
   readonly search=signal('');
+  readonly tour=signal<TourState>({active:false,paused:false,index:0,title:'',narration:''});
   readonly filteredEvents=computed(()=>this.store.events().filter(e=>`${e.plate}${e.zone}${e.action}`.toLowerCase().includes(this.search().toLowerCase())));
   readonly activeAlarms=computed(()=>this.store.alarms().filter(a=>!a.acknowledged).length);
   readonly recommended=computed(()=>[...this.store.zones()].sort((a,b)=>b.capacity-b.occupied-(a.capacity-a.occupied))[0]);
@@ -46,6 +50,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private timer?:ReturnType<typeof setInterval>;
   private toastTimer?:ReturnType<typeof setTimeout>;
   private introTimer?:ReturnType<typeof setTimeout>;
+  private tourTimer?:ReturnType<typeof setTimeout>;
+  private lastAgentResult='';
   private disposed=false;
   async ngAfterViewInit(){
     for(let i=0;i<6;i++)this.store.advance();
@@ -80,16 +86,16 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private projectPins(pins:ScenePin[]){
     for(const pin of pins){const element=this.pins.nativeElement.querySelector<HTMLElement>(`[data-pin="${pin.id}"]`);if(!element)continue;element.style.transform=`translate(${pin.x.toFixed(1)}px,${pin.y.toFixed(1)}px) translate(-50%,-100%)`;element.style.visibility=pin.visible?'visible':'hidden';}
   }
-  togglePanel(panel:Panel){this.panel.update(current=>current===panel?null:panel);this.clean.set(false);}
-  selectZone(id:ZoneId){this.selected.set(id);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.focusZone(id);this.scene?.showRoute(false);this.panel.set(null);}
-  selectVehicle(vehicle?:VehiclePick,trafficIndex=0){this.selected.set(null);this.vehicleSelected.set(true);this.parkedVehicle.set(vehicle?.parked??false);this.vehicleIndex.set((vehicle?.index??trafficIndex)+1);this.following.set(!vehicle?.parked);this.orbit.set(false);this.panel.set(null);this.scene?.focusVehicle(vehicle?.parked?vehicle.position:undefined,vehicle?.index??trafficIndex);this.scene?.showRoute(!vehicle?.parked);}
+  togglePanel(panel:Panel){this.assistant?.hide();this.panel.update(current=>current===panel?null:panel);this.clean.set(false);}
+  selectZone(id:ZoneId,fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(id);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.focusZone(id);this.scene?.showRoute(false);this.panel.set(null);}
+  selectVehicle(vehicle?:VehiclePick,trafficIndex=0,fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(true);this.parkedVehicle.set(vehicle?.parked??false);this.vehicleIndex.set((vehicle?.index??trafficIndex)+1);this.following.set(!vehicle?.parked);this.orbit.set(false);this.panel.set(null);this.scene?.focusVehicle(vehicle?.parked?vehicle.position:undefined,vehicle?.index??trafficIndex);this.scene?.showRoute(!vehicle?.parked);}
   nextVehicle(){this.selectVehicle(undefined,this.vehicleIndex()%3);}
   toggleFollow(){this.following.update(v=>!v);this.scene?.followVehicle(this.following());}
-  reset(){this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.reset();this.scene?.showRoute(false);this.panel.set(null);}
-  top(){this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.top();this.scene?.showRoute(false);this.panel.set(null);}
-  toggleOrbit(){this.orbit.update(v=>!v);this.following.set(false);this.scene?.setOrbit(this.orbit());this.panel.set(null);}
+  reset(fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.reset();this.scene?.showRoute(false);this.panel.set(null);}
+  top(fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.top();this.scene?.showRoute(false);this.panel.set(null);}
+  toggleOrbit(){this.manualSceneInput();this.orbit.update(v=>!v);this.following.set(false);this.scene?.setOrbit(this.orbit());this.panel.set(null);}
   togglePause(){this.paused.update(v=>!v);this.scene?.setPaused(this.paused());}
-  toggleClean(){this.clean.update(v=>!v);this.panel.set(null);this.help.set(false);this.selected.set(null);this.vehicleSelected.set(false);this.scene?.showRoute(false);}
+  toggleClean(){this.clean.update(v=>!v);this.assistant?.hide();if(this.clean()){this.stopTour();this.assistant?.voice.stop();}this.panel.set(null);this.help.set(false);this.selected.set(null);this.vehicleSelected.set(false);this.scene?.showRoute(false);}
   changeQuality(){this.scene?.applyQuality(this.quality);}
   acknowledge(id:number){this.store.acknowledge(id);this.message('演示告警已确认');}
   exportEvents(){
@@ -106,7 +112,44 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     }catch{this.message('可手动旋转设备，页面已提供横屏适配');}
   }
   private message(value:string){this.toast.set(value);clearTimeout(this.toastTimer);this.toastTimer=setTimeout(()=>this.toast.set(''),3500);}
+  readonly agentContext=()=>snapshot(this.store.zones(),this.store.events(),this.store.alarms(),this.ready()&&this.introDone(),this.selected()??(this.vehicleSelected()?'vehicle':'overview'),this.lastAgentResult);
+  readonly executeAgentAction=(input:AgentAction):string=>{
+    const action=parseAgentAction(input);
+    if(!action)return '未执行：指令未通过场景白名单校验';
+    let result='';
+    if(action.type==='scene.focus'){
+      if(!this.ready()||!this.introDone())result='未执行定位：精细场景尚未加载完成';
+      else{this.pauseTour();this.focusAgentTarget(action.target);result=`✓ 已启动镜头定位：${action.target==='overview'?'园区全景':action.target==='top'?'垂直俯视':action.target==='vehicle'?'巡行车辆固定尾随':this.store.zones().find(z=>z.id===action.target)?.name}`;}
+    }else if(action.type==='report.show')result='✓ 报表已按本次模拟快照计算，将显示在助手卡片中';
+    else if(action.type==='tour.start'){
+      if(!this.ready()||!this.introDone())result='未启动导览：请先等待场景加载完成';
+      else{this.stopTour();this.runTourStep(0);result='✓ 园区导览已启动，可暂停、继续或结束';}
+    }else if(action.type==='tour.pause'){result=this.tour().active?'✓ 导览已暂停':'当前没有正在进行的导览';this.pauseTour();}
+    else if(action.type==='tour.resume'){
+      if(this.tour().active&&this.tour().paused){this.runTourStep(this.tour().index);result='✓ 导览已继续';}
+      else result=this.tour().active?'导览正在进行':'当前没有已暂停的导览';
+    }else if(action.type==='tour.stop'){this.stopTour();result='✓ 导览已结束，镜头保持当前位置';}
+    this.lastAgentResult=result;return result;
+  };
+  private focusAgentTarget(target:string){
+    this.clean.set(false);
+    if(target==='overview')this.reset(true);
+    else if(target==='top')this.top(true);
+    else if(target==='vehicle')this.selectVehicle(undefined,0,true);
+    else if(target==='A'||target==='B'||target==='C')this.selectZone(target,true);
+  }
+  private runTourStep(index:number){
+    clearTimeout(this.tourTimer);
+    const step=CAMPUS_TOUR[index];
+    if(!step){this.stopTour();this.message('园区导览已完成');return;}
+    this.tour.set({active:true,paused:false,index,title:step.title,narration:step.narration});
+    this.focusAgentTarget(step.target);this.assistant?.narrate(step.narration);
+    this.tourTimer=setTimeout(()=>this.runTourStep(index+1),14000);
+  }
+  private pauseTour(){if(this.tour().active&&!this.tour().paused){clearTimeout(this.tourTimer);this.tour.update(t=>({...t,paused:true}));this.assistant?.stopSpeaking();}}
+  private stopTour(){clearTimeout(this.tourTimer);this.tour.set({active:false,paused:false,index:0,title:'',narration:''});this.assistant?.stopSpeaking();}
+  manualSceneInput(){this.pauseTour();}
   closeVehicle(){this.vehicleSelected.set(false);this.following.set(false);this.scene?.followVehicle(false);this.scene?.showRoute(false);}
   @HostListener('document:keydown.escape')close(){this.help.set(false);this.panel.set(null);this.selected.set(null);this.closeVehicle();if(this.clean())this.clean.set(false);}
-  ngOnDestroy(){this.disposed=true;clearInterval(this.timer);clearTimeout(this.toastTimer);clearTimeout(this.introTimer);this.openingVideo?.nativeElement.pause();this.scene?.dispose();}
+  ngOnDestroy(){this.disposed=true;clearInterval(this.timer);clearTimeout(this.toastTimer);clearTimeout(this.introTimer);clearTimeout(this.tourTimer);this.openingVideo?.nativeElement.pause();this.scene?.dispose();}
 }

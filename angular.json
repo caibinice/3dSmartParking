@@ -50,7 +50,7 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": { "prebundle": { "exclude": ["@babylonjs/core", "@babylonjs/loaders"] } },
+          "options": { "proxyConfig": "proxy.conf.json", "prebundle": { "exclude": ["@babylonjs/core", "@babylonjs/loaders"] } },
           "configurations": {
             "production": {
               "buildTarget": "parking:build:production"

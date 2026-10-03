@@ -9,7 +9,7 @@
     <symbol id="i-list" viewBox="0 0 24 24"><path d="M5 3h14v18H5V3Zm4 5h6m-6 4h6m-6 4h4"/></symbol>
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M4 17h16l-2-3V9a6 6 0 0 0-12 0v5l-2 3Zm6 3h4"/></symbol>
   </defs></svg>
-  <canvas #canvas aria-label="沉浸式三维停车园区：拖动旋转，滚轮或双指缩放" tabindex="0"></canvas>
+  <canvas #canvas aria-label="沉浸式三维停车园区：拖动旋转，滚轮或双指缩放" tabindex="0" (pointerdown)="manualSceneInput()" (wheel)="manualSceneInput()"></canvas>
   <header class="scene-header">
     <div class="header-side"><span class="live-dot"></span><span>数字孪生 · {{mobile?'移动端':'园区全景'}}</span></div>
     <div class="title-frame"><h1>某某中医院数字孪生停车场</h1><span>SMART PARKING · IMMERSIVE CAMPUS</span></div>
@@ -78,6 +78,9 @@
   <div class="scene-caption"><span class="live-dot"></span>{{paused()?'演示已暂停':'演示场景'}} · 某某公司 <span class="gesture-tip">{{mobile?'单指旋转 · 双指缩放':'拖动旋转 · 滚轮缩放 · 右键平移'}}</span></div>
   @if(toast()){<div class="toast" role="status">{{toast()}}</div>}
   @if(help()){
-    <div class="modal-backdrop" (click)="help.set(false)"><section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title" (click)="$event.stopPropagation()"><button class="close-button" (click)="help.set(false)" aria-label="关闭说明">×</button><span class="eyebrow">IMMERSIVE EXPLORATION</span><h2 id="help-title">让三维场景成为主界面</h2><ul><li>默认仅显示园区与操作底栏，统计、图表和记录点击后展开。</li><li>点击 A / B / C 定位点平滑飞入区域；点击车辆查看特写，支持跟随巡行。</li><li>桌面拖动旋转、滚轮缩放、右键平移；手机单指旋转、双指缩放。</li><li>纯净场景隐藏所有信息层，再点“显示界面”恢复；Esc 可关闭浮层。</li><li>手机保留同一精细园区、纹理和车辆，使用保守减面，竖屏自动转换横向布局。</li><li>当前为独立前端演示，数据、车辆行为和提醒均为模拟，未连接真实设备。</li></ul><button class="primary" (click)="help.set(false)">开始探索</button></section></div>
+    <div class="modal-backdrop" (click)="help.set(false)"><section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title" (click)="$event.stopPropagation()"><button class="close-button" (click)="help.set(false)" aria-label="关闭说明">×</button><span class="eyebrow">IMMERSIVE EXPLORATION</span><h2 id="help-title">让三维场景成为主界面</h2><ul><li>默认仅显示园区与操作底栏，统计、图表和记录点击后展开。</li><li>点击 A / B / C 定位点平滑飞入区域；点击车辆查看特写，支持跟随巡行。</li><li>桌面拖动旋转、滚轮缩放、右键平移；手机单指旋转、双指缩放。</li><li>纯净场景隐藏所有信息层，再点“显示界面”恢复；Esc 可关闭浮层。</li><li>手机保留同一精细园区、纹理和车辆，使用保守减面，竖屏自动转换横向布局。</li><li>助手复用企业智能座舱服务；停车数据、车辆行为和提醒均为模拟，未连接真实设备。</li></ul><button class="primary" (click)="help.set(false)">开始探索</button></section></div>
+  }
+  @if(ready() && introDone()){
+    <app-parking-assistant [context]="agentContext" [execute]="executeAgentAction" [mobile]="mobile" [tour]="tour()" (opened)="panel.set(null);clean.set(false)"></app-parking-assistant>
   }
 </div>
