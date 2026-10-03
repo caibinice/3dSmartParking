@@ -26,6 +26,8 @@ location /another-app/ { return 200 'ok'; }
         self.assertEqual(updated.count("location ^~ /smartParking/"), 1)
         self.assertEqual(updated.count("location = /smartParking/index.html"), 1)
         self.assertEqual(updated.count("location = /smartCockpit/api/parking-agent/stream"), 1)
+        self.assertEqual(updated.count("location = /smartCockpit/api/parking/ag-ui"), 1)
+        self.assertEqual(updated.count("location = /smartCockpit/api/parking/vision"), 1)
         self.assertIn('"microphone=()" always;', updated)
         self.assertIn('microphone=(self)', updated)
         self.assertIn('proxy_buffering off', updated)

@@ -31,10 +31,9 @@
       <div class="panel-heading"><div><span class="eyebrow">PARKING DIGITAL TWIN</span><h2>{{panel()==='overview'?'停车态势':panel()==='zones'?'停车分区':panel()==='records'?'出入记录':panel()==='alarms'?'运行提醒':panel()==='views'?'视角控制':'显示与设置'}}</h2></div><button class="close-button" (click)="panel.set(null)" aria-label="关闭功能面板">×</button></div>
       <div class="panel-content">
         @if(panel()==='overview'){
-          <p class="data-label"><span class="live-dot"></span>模拟数据 · {{paused()?'已暂停':'每 5 秒更新'}}</p>
+          <p class="data-label"><span class="live-dot"></span>{{store.source()==='database-synthetic'?'数据库合成快照 · '+store.sampledAt():'浏览器演示 · '+(paused()?'已暂停':'每 5 秒更新')}}</p>
           <div class="kpis"><article><span>空余泊位</span><strong>{{store.summary().free}}</strong><small>共 {{store.summary().capacity}} 个</small></article><article><span>在场车辆</span><strong>{{store.summary().occupied}}</strong><small>占用率 {{store.summary().rate}}%</small></article></div>
-          <div class="section-title"><h3>日内利用率</h3><small>示例曲线</small></div>
-          <div class="bar-chart" role="img" aria-label="模拟日内利用率柱形图">@for(value of trend;track $index){<span [style.height.%]="value"><i>{{value}}%</i></span>}</div><div class="chart-labels"><span>06:00</span><span>12:00</span><span>18:00</span></div>
+          @if(store.source()==='browser-demo'){<div class="section-title"><h3>日内利用率</h3><small>浏览器示例曲线</small></div><div class="bar-chart" role="img" aria-label="浏览器示例日内利用率柱形图">@for(value of trend;track $index){<span [style.height.%]="value"><i>{{value}}%</i></span>}</div><div class="chart-labels"><span>06:00</span><span>12:00</span><span>18:00</span></div>}@else{<p class="panel-description">历史趋势请在停车助手的业务台 → 经营中查询；本面板仅展示数据库最后采样快照。</p>}
           <div class="recommendation"><b>泊位推荐 · {{recommended().name}}</b><p>当前有 {{recommended().capacity-recommended().occupied}} 个空余泊位。</p><button class="primary" (click)="selectZone(recommended().id)">飞行定位 {{recommended().id}} 区 ↗</button></div>
         }
         @if(panel()==='zones'){
@@ -47,8 +46,8 @@
           <div class="event-list">@for(event of filteredEvents();track event.id){<div class="event"><span class="event-arrow" [class.out]="event.action==='离场'">{{event.action==='入场'?'↓':'↑'}}</span><div><b>{{event.plate}}</b><small>{{event.time}} · {{event.zone}} 区</small></div><span>{{event.action}}</span></div>}@empty{<p class="empty">没有匹配的模拟记录</p>}</div>
         }
         @if(panel()==='alarms'){
-          <p class="panel-description">{{activeAlarms()}} 条待确认 · 仅演示，不发送设备指令。</p>
-          @for(alarm of store.alarms();track alarm.id){<article class="alarm" [class.acknowledged]="alarm.acknowledged"><span class="severity" [class.high]="alarm.level==='高'">{{alarm.level}}</span><div><b>{{alarm.title}}</b><small>{{alarm.zone}} 区 · {{alarm.acknowledged?'已确认':'模拟告警'}}</small></div><button (click)="selectZone(alarm.zone)" aria-label="定位告警区域">↗</button><button (click)="acknowledge(alarm.id)" [disabled]="alarm.acknowledged" [attr.aria-label]="'确认告警 '+alarm.id">✓</button></article>}
+          <p class="panel-description">{{activeAlarms()}} 条待核验 · {{store.source()==='database-synthetic'?'请在助手业务台通过工单流程处理。':'本地演示确认，不发送设备指令。'}}</p>
+          @for(alarm of store.alarms();track alarm.id){<article class="alarm" [class.acknowledged]="alarm.acknowledged"><span class="severity" [class.high]="alarm.level==='高'">{{alarm.level}}</span><div><b>{{alarm.title}}</b><small>{{alarm.zone}} 区 · {{alarm.acknowledged?'已确认':'模拟告警'}}</small></div><button (click)="selectZone(alarm.zone)" aria-label="定位告警区域">↗</button><button (click)="acknowledge(alarm.id)" [disabled]="alarm.acknowledged || store.source()==='database-synthetic'" [attr.aria-label]="'确认告警 '+alarm.id">✓</button></article>}
         }
         @if(panel()==='views'){
           <div class="view-grid"><button (click)="reset()"><svg><use href="#i-map"/></svg><b>园区全景</b><small>回到初始镜头</small></button><button (click)="top()"><svg><use href="#i-eye"/></svg><b>垂直俯视</b><small>查看道路与泊位</small></button><button (click)="toggleOrbit()"><svg><use href="#i-full"/></svg><b>{{orbit()?'停止巡航':'自动巡航'}}</b><small>缓慢环绕园区</small></button><button (click)="selectVehicle()"><svg><use href="#i-car"/></svg><b>车辆特写</b><small>近距离检查模型细节</small></button></div>
@@ -81,6 +80,7 @@
     <div class="modal-backdrop" (click)="help.set(false)"><section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title" (click)="$event.stopPropagation()"><button class="close-button" (click)="help.set(false)" aria-label="关闭说明">×</button><span class="eyebrow">IMMERSIVE EXPLORATION</span><h2 id="help-title">让三维场景成为主界面</h2><ul><li>默认仅显示园区与操作底栏，统计、图表和记录点击后展开。</li><li>点击 A / B / C 定位点平滑飞入区域；点击车辆查看特写，支持跟随巡行。</li><li>桌面拖动旋转、滚轮缩放、右键平移；手机单指旋转、双指缩放。</li><li>纯净场景隐藏所有信息层，再点“显示界面”恢复；Esc 可关闭浮层。</li><li>手机保留同一精细园区、纹理和车辆，使用保守减面，竖屏自动转换横向布局。</li><li>助手复用企业智能座舱服务；停车数据、车辆行为和提醒均为模拟，未连接真实设备。</li></ul><button class="primary" (click)="help.set(false)">开始探索</button></section></div>
   }
   @if(ready() && introDone()){
-    <app-parking-assistant [context]="agentContext" [execute]="executeAgentAction" [mobile]="mobile" [tour]="tour()" (opened)="panel.set(null);clean.set(false)"></app-parking-assistant>
+    <app-parking-assistant [context]="agentContext" [execute]="executeAgentAction" [mobile]="mobile" [tour]="tour()" [capture]="captureAgentScene" (catalogLoaded)="receiveAgentCatalog($event)" (databaseSnapshot)="receiveAgentSnapshot($event)" (routeReady)="receiveAgentRoute($event)" (signedOut)="store.events.set([]);store.alarms.set([])" (opened)="panel.set(null);clean.set(false)"></app-parking-assistant>
   }
+  @if(navigation();as path){<div class="route-chip"><span>道路指引 · {{path.label}} · 约 {{path.meters}} 米（模型估计）</span><button (click)="clearAgentRoute()" aria-label="清除道路路径">×</button></div>}
 </div>

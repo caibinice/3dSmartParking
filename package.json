@@ -13,6 +13,7 @@
     "prepare:traffic": "node scripts/prepare-traffic.mjs"
   },
   "dependencies": {
+    "@ag-ui/core": "1.0.1",
     "@angular/common": "21.2.25",
     "@angular/compiler": "21.2.25",
     "@angular/core": "21.2.25",
@@ -22,7 +23,8 @@
     "@babylonjs/core": "9.29.0",
     "@babylonjs/loaders": "9.29.0",
     "rxjs": "~7.8.2",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@angular/build": "21.2.24",

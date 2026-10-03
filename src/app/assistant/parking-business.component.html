@@ -1,0 +1,37 @@
+<nav class="business-nav" aria-label="停车业务工具"><button [class.selected]="mode==='guide'" (click)="mode='guide';modeChanged()">导览</button>@if(operator()){<button [class.selected]="mode==='analytics'" (click)="mode='analytics';modeChanged()">经营</button>}@if(staff()){<button [class.selected]="mode==='workorders'" (click)="mode='workorders';modeChanged()">工单</button><button [class.selected]="mode==='vision'" (click)="mode='vision';modeChanged()">看图</button><button [class.selected]="mode==='audit'" (click)="mode='audit';modeChanged()">审计</button>}@if(admin()){<button [class.selected]="mode==='admin'" (click)="mode='admin';modeChanged()">配置</button>}</nav>
+<div class="business-body">
+ @if(mode==='guide'){
+  <h3>去哪里停车？</h3><p class="muted">结合数据库空位、目的地、步行距离与模拟预留规则推荐。路径仅用于本三维演示。</p>
+  <label>目的地<select aria-label="停车目的地" [(ngModel)]="client().destination">@for(p of catalog().graph.nodes;track p.id){@if(p.kind==='destination'||p.kind==='service'){<option [value]="p.id" [disabled]="p.closed">{{p.label}}{{p.closed?'（关闭）':''}}</option>}}</select></label>
+  <label>泊位偏好<select aria-label="泊位偏好" [(ngModel)]="client().preference"><option value="standard">普通停车</option><option value="accessible">无障碍条件</option><option value="charging">充电条件</option><option value="emergency">急诊优先</option></select></label>
+  <div class="button-row"><button (click)="send.emit('推荐停车区')">查看联合推荐</button><button (click)="showRoute()" [disabled]="busy()">显示入口路径</button></div>
+  <h3>三维导览线路</h3><div class="tour-cards"><button (click)="send.emit('开始访客导览')"><b>访客到院</b><span>入口 · 门诊 · 住院 · 出口</span></button>@if(staff()){<button (click)="send.emit('开始运营巡检')"><b>运营巡检</b><span>车区 · 充电服务 · 急诊</span></button><button (click)="send.emit('开始夜间巡检')"><b>夜间巡检</b><span>安保 · 入口 · 住院 · 急诊 · 出口</span></button>}</div>
+  <h3>园区点位</h3><div class="poi-grid">@for(p of catalog().graph.nodes;track p.id){@if(p.kind!=='junction'){<button [disabled]="p.closed" (click)="focus.emit(p.id)">{{p.label}}</button>}}</div>
+ }
+ @if(mode==='analytics'&&operator()){
+  <h3>一年停车经营分析</h3><p class="muted">{{catalog().dataset.startDate}} 至 {{catalog().dataset.endDate}}，Asia/Shanghai。账本为公开规律衍生的合成数据。</p>
+  <details><summary>谷时汇总任务</summary><p class="muted">现有座舱服务每天北京时间 02:15 汇总日、周、月、年报，不调用模型。缓存的采样截止日与固定数据集一致。</p><button (click)="loadReportJobs()" [disabled]="busy()">查看汇总状态</button>@for(job of reportJobs();track job.period){<p class="muted">{{job.period}} · {{job.generatedAt}}（北京时间）</p>}</details>
+  <div class="date-range"><label>开始<input aria-label="报表开始日期" type="date" [(ngModel)]="from" [min]="catalog().dataset.startDate" [max]="to"></label><label>结束<input aria-label="报表结束日期" type="date" [(ngModel)]="to" [min]="from" [max]="catalog().dataset.endDate"></label></div>
+  <label>分区<select aria-label="报表分区" [(ngModel)]="zone"><option value="">全部</option><option value="A">门诊A区</option><option value="B">住院B区</option><option value="C">急诊C区</option></select></label><button (click)="analytics()" [disabled]="busy()">查询经营报表</button>
+  @if(report();as result){<app-parking-business-report [report]="result"></app-parking-business-report>}
+  <details><summary>停车流水分页</summary><div class="button-row"><button [disabled]="page<=1||busy()" (click)="page=page-1;loadStays()">上一页</button><span>第 {{page}} 页</span><button [disabled]="busy()" (click)="page=page+1;loadStays()">下一页</button><button (click)="loadStays()" [disabled]="busy()">查询流水</button></div>@for(s of stays();track s.id){<article class="record"><b>{{s.vehicle_alias}} · {{s.zone_id}}区</b><small>{{s.entered_at}} — {{s.exited_at||'尚未离场'}}</small><span>实收模拟金额 ¥{{s.paid_cents/100}}</span></article>}</details>
+ }
+ @if(mode==='workorders'&&staff()){
+  <h3>告警核验与派单</h3><p class="muted">助手只准备草稿。安保提交，运营审核，领取后核验，最后复核关闭；所有流转写入审计。</p><button (click)="send.emit('准备告警工单')">准备最新告警工单</button>
+  @if(draft()?.alert){<section class="confirm-box"><b>{{draft().alert.title}} · {{draft().alert.zone}}区</b><label>处置备注<textarea aria-label="工单处置备注" [(ngModel)]="note" maxlength="1500" rows="3"></textarea></label><label class="check"><input type="checkbox" [(ngModel)]="confirmation">已人工核验内容，确认提交待审核工单</label><button [disabled]="!confirmation||busy()" (click)="submitWorkorder()">提交待审核工单</button></section>}@else if(draft()?.empty){<p>{{draft().message}}</p>}
+  <button (click)="loadWorkorders()" [disabled]="busy()">刷新工单</button>
+  @for(w of workorders();track w.id){<article class="work-card"><header><b>#{{w.id}} {{w.title}}</b><span>{{status(w.status)}}</span></header><p>{{w.note}}</p><small>{{w.created_by}} · {{w.updated_at}} · 版本 {{w.version}}</small><div class="button-row">@if(w.status==='pending_review'&&operator()){<button (click)="prepareTransition(w,'approve')">批准</button>}@if(w.status==='approved'){<button (click)="prepareTransition(w,'assign')">领取</button>}@if(w.status==='assigned'){<button (click)="prepareTransition(w,'resolve')">完成核验</button>}@if(w.status==='resolved'&&operator()){<button (click)="prepareTransition(w,'close')">复核关闭</button>}</div></article>}
+  @if(pending){<section class="confirm-box" role="alertdialog" aria-label="确认工单流转"><b>确认{{actionName(pending.action)}} #{{pending.row.id}}？</b><textarea aria-label="流转核验记录" [(ngModel)]="note" maxlength="1500" rows="3"></textarea><label class="check"><input type="checkbox" [(ngModel)]="confirmation">已核验，确认执行本次流转</label><div class="button-row"><button (click)="transition()" [disabled]="!confirmation||busy()">确认{{actionName(pending.action)}}</button><button (click)="pending=null">取消</button></div></section>}
+ }
+ @if(mode==='vision'&&staff()){
+  <h3>当前三维视角问答</h3><p class="muted">截图只包含三维画布，不含聊天与业务面板。确认后发送到 DeepSeek 图像接口，服务不保存截图。</p><button (click)="takeScreenshot()">截取当前视角</button>@if(image){<img class="scene-preview" [src]="image" alt="待发送的当前三维场景截图"><label>想了解什么？<textarea aria-label="截图问题" [(ngModel)]="visionQuestion" maxlength="1000" rows="3"></textarea></label><label class="check"><input type="checkbox" [(ngModel)]="imageConfirmed">确认将此截图发送给图像模型</label><button (click)="askVision()" [disabled]="!imageConfirmed||busy()">分析这张场景图</button>}@if(visionAnswer()){<p class="vision-answer">{{visionAnswer()}}</p>}
+ }
+ @if(mode==='audit'&&staff()){
+  <h3>最近操作审计</h3><p class="muted">安保仅看自己的审计；运营和管理员可查看全局。工具反馈标记为客户端执行反馈，不伪装成现场设备回执。</p><button (click)="loadAudits()" [disabled]="busy()">刷新审计</button>@for(a of audits();track $index){<article class="record"><b>{{a.actor}} · {{a.action}}</b><small>{{a.occurred_at}}</small><p>{{a.target}} · {{a.detail}}</p></article>}
+ }
+ @if(mode==='admin'&&admin()){
+  <h3>园区道路图配置</h3><p class="muted">稳定ID、闭合道路状态、点位坐标与版本由后端校验。修改后，新规划读取新版本。</p><textarea class="json-editor" aria-label="园区图JSON配置" [(ngModel)]="graphJson" maxlength="14000" rows="12"></textarea><button (click)="saveGraph()" [disabled]="busy()">保存道路图</button>
+  <h3>创建业务账号</h3><label>账号<input aria-label="新业务账号" [(ngModel)]="newUser" maxlength="40"></label><label>显示名称<input [(ngModel)]="newName" maxlength="100"></label><label>角色<select [(ngModel)]="newRole"><option value="security">安保</option><option value="operator">运营</option></select></label><label>密码（至少12字符，UTF-8不超过72字节）<input aria-label="新业务账号密码" type="password" autocomplete="new-password" [(ngModel)]="newPassword" maxlength="72"></label><button (click)="createUser()" [disabled]="busy()||!newUser||newPassword.length<12">创建账号</button>
+ }
+ @if(busy()){<p role="status" class="status">正在处理业务请求…</p>}@if(error()){<p role="status" class="status">{{error()}}</p>}
+</div>

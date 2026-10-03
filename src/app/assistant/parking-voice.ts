@@ -8,7 +8,7 @@ interface Recognition {
   start(): void; stop(): void; abort(): void;
 }
 type RecognitionConstructor = new () => Recognition;
-export interface VoiceState { armed: boolean; listening: boolean; speaking: boolean; hint: string; }
+export interface VoiceState { armed: boolean; listening: boolean; speaking: boolean; hint: string; conversation?:boolean; }
 
 /** User-armed browser voice, no mock ASR and no always-on microphone by default. */
 export class ParkingVoice {
@@ -18,7 +18,8 @@ export class ParkingVoice {
   readonly supported = !!this.constructorApi;
   readonly ttsSupported = 'speechSynthesis' in window;
   private state: VoiceState = { armed: false, listening: false, speaking: false, hint: '' };
-  private mode: 'once' | 'wake' | null = null;
+  private mode: 'once' | 'wake' | 'conversation' | null = null;
+  private spokenText='';
   private waiting = false;
   private suspended = false;
   private restarts = 0;
@@ -28,27 +29,35 @@ export class ParkingVoice {
   private speechGeneration = 0;
   constructor(private onState: (state: VoiceState) => void, private onCommand: (text: string) => void, private onWake: () => void) {}
   private update(patch: Partial<VoiceState>) { this.state = { ...this.state, ...patch }; this.onState({ ...this.state }); }
-  start(wake: boolean) {
+  start(wake: boolean, conversation=false) {
     this.stop(); this.cancelSpeech();
     if (!this.constructorApi) { this.update({ hint: '当前浏览器没有语音识别API，可用文字与按钮；回答仍可播报。' }); return; }
-    this.mode = wake ? 'wake' : 'once'; this.suspended = false; this.waiting = false; this.restarts = 0;
-    this.update({ armed: wake, hint: wake ? '监听已开启：说“你好停车助手”，再说请求' : '请说一句业务请求…' });
+    this.mode = conversation ? 'conversation' : wake ? 'wake' : 'once'; this.suspended = false; this.waiting = false; this.restarts = 0;
+    this.update({ armed: wake, conversation, hint: conversation?'连续对话已开启；播报中说“停车助手”可打断，离开页面自动关闭。':wake ? '监听已开启：说“你好停车助手”，再说请求' : '请说一句业务请求…' });
     this.listen();
   }
   private listen() {
     if (this.destroyed || this.suspended || !this.mode || document.hidden || !this.constructorApi) return;
     const recognition = this.recognition = new this.constructorApi();
-    recognition.lang = 'zh-CN'; recognition.continuous = this.mode === 'wake'; recognition.interimResults = false;
+    recognition.lang = 'zh-CN'; recognition.continuous = this.mode !== 'once'; recognition.interimResults = this.mode==='conversation';
     recognition.onresult = event => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i]; if (!result.isFinal) continue;
+        const result = event.results[i];
         const text = result[0].transcript.trim(); if (!text) continue;
+        const parsed = wakeCommand(text);
+        if(this.mode==='conversation'&&this.state.speaking){
+          const normalize=(value:string)=>value.replace(/[\s，。！？,.!?]/g,'');
+          if(this.spokenText&&normalize(this.spokenText).includes(normalize(text)))continue;
+          if(!parsed.woke && !text.includes('停止播报'))continue;
+          this.cancelSpeech();this.onWake();this.waiting=true;
+          if(text.includes('停止播报')&&!parsed.woke){this.update({hint:'播报已停止，可以继续说话。'});continue;}
+        }
+        if(!result.isFinal)continue;
         this.restarts = 0;
         if (this.mode === 'once') { this.stop(); this.onWake(); this.onCommand(text); return; }
-        const parsed = wakeCommand(text);
         if (parsed.woke) { this.waiting = true; this.onWake(); this.update({ hint: '已唤醒，请说业务请求…' }); }
-        const command = parsed.woke ? parsed.command : this.waiting ? text : '';
-        if (command) { this.waiting = false; this.pause(); this.onCommand(command); return; }
+        const command = parsed.woke ? parsed.command : this.waiting || this.mode==='conversation' ? text : '';
+        if (command) { this.waiting = false; if(this.mode!=='conversation')this.pause(); this.onCommand(command); return; }
       }
     };
     recognition.onerror = event => {
@@ -62,7 +71,7 @@ export class ParkingVoice {
     recognition.onend = () => {
       if (this.recognition !== recognition) return;
       this.recognition = undefined; this.update({ listening: false });
-      if (this.mode === 'wake' && !this.suspended && ++this.restarts <= 3 && !document.hidden)
+      if ((this.mode === 'wake'||this.mode==='conversation') && !this.suspended && ++this.restarts <= 3 && !document.hidden)
         this.restartTimer = setTimeout(() => this.listen(), 500);
       else if (!this.suspended && this.mode) { this.stop(); this.update({ hint: '监听已结束，点击语音唤醒重新开启。' }); }
     };
@@ -74,20 +83,22 @@ export class ParkingVoice {
     const recognition = this.recognition; this.recognition = undefined;
     recognition?.abort(); this.update({ listening: false });
   }
-  resume() { if (this.mode === 'wake' && !this.destroyed && !document.hidden && !this.recognition) { this.suspended = false; this.listen(); } }
-  stop() { this.mode = null; this.waiting = false; this.pause(); this.update({ armed: false, hint: '语音监听已关闭' }); }
+  pauseForRequest(){if(this.mode!=='conversation')this.pause();}
+  resume() { if ((this.mode === 'wake'||this.mode==='conversation') && !this.destroyed && !document.hidden && !this.recognition) { this.suspended = false; this.listen(); } }
+  stop() { this.mode = null; this.waiting = false; this.pause(); this.update({ armed: false, conversation:false, hint: '语音监听已关闭' }); }
   speak(text: string) {
     if (!this.ttsSupported || !text.trim() || this.destroyed) return;
-    this.cancelSpeech(); this.pause();
+    this.cancelSpeech(); if(this.mode!=='conversation')this.pause();
     const utterance = new SpeechSynthesisUtterance(text.replace(/\[\d+\]/g, '').slice(0, 1500));
     utterance.lang = 'zh-CN'; utterance.rate = 1;
+    this.spokenText=utterance.text;
     utterance.voice = speechSynthesis.getVoices().find(v => /^zh/i.test(v.lang)) ?? null;
     const generation = this.speechGeneration;
-    const finish = () => { if (generation !== this.speechGeneration) return; clearTimeout(this.speechTimer); this.update({ speaking: false }); this.resume(); };
+    const finish = () => { if (generation !== this.speechGeneration) return; clearTimeout(this.speechTimer); this.spokenText='';this.update({ speaking: false }); this.resume(); };
     utterance.onend = finish; utterance.onerror = finish;
     this.update({ speaking: true }); speechSynthesis.speak(utterance);
     this.speechTimer = setTimeout(() => { this.cancelSpeech(); this.resume(); }, 90000);
   }
-  cancelSpeech() { this.speechGeneration++; clearTimeout(this.speechTimer); if (this.ttsSupported) speechSynthesis.cancel(); this.update({ speaking: false }); }
+  cancelSpeech() { this.speechGeneration++; this.spokenText='';clearTimeout(this.speechTimer); if (this.ttsSupported) speechSynthesis.cancel(); this.update({ speaking: false }); }
   dispose() { this.destroyed = true; this.stop(); this.cancelSpeech(); }
 }

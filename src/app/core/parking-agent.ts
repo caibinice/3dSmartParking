@@ -1,6 +1,6 @@
 import type { Alarm, ParkingEvent, Zone, ZoneId } from './parking-data';
 
-export type AgentActionType = 'scene.focus' | 'report.show' | 'tour.start' | 'tour.pause' | 'tour.resume' | 'tour.stop';
+export type AgentActionType = 'scene.focus' | 'scene.poi' | 'route.show' | 'route.clear' | 'workorder.prepare' | 'report.show' | 'tour.start' | 'tour.pause' | 'tour.resume' | 'tour.stop';
 export interface AgentAction { id: string; type: AgentActionType; target: string; }
 export interface AgentSnapshot {
   source: 'browser-demo'; observedAt: string; sceneReady: boolean;
@@ -9,16 +9,20 @@ export interface AgentSnapshot {
 }
 export interface ReportZone { id: ZoneId; name: string; capacity: number; occupied: number; free: number; rate: number; }
 export interface AgentReport {
-  kind: 'occupancy' | 'recommendation' | 'events' | 'alerts';
-  source: 'browser-demo'; observedAt: string;
+  kind: 'occupancy' | 'recommendation' | 'events' | 'alerts' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'workorders' | 'audit';
+  source: 'browser-demo' | 'database-synthetic'; observedAt: string;
   data: { zones?: ReportZone[]; capacity?: number; occupied?: number; free?: number; rate?: number }
-    | ReportZone | Omit<ParkingEvent, 'id'>[] | Alarm[];
+    | ReportZone | Omit<ParkingEvent, 'id'>[] | Alarm[] | Record<string,any> | Record<string,any>[];
 }
 export const TOOL_TARGETS: Record<AgentActionType, readonly string[]> = {
   'scene.focus': ['A', 'B', 'C', 'overview', 'top', 'vehicle'],
-  'report.show': ['occupancy', 'events', 'alerts', 'recommendation'],
-  'tour.start': ['campus'], 'tour.pause': ['campus'], 'tour.resume': ['campus'], 'tour.stop': ['campus']
+  'scene.poi': ['entrance','exit','parking-a','parking-b','parking-c','outpatient','inpatient','emergency','charging','accessible','security'],
+  'route.show': ['entrance','exit','parking-a','parking-b','parking-c','outpatient','inpatient','emergency','charging','accessible','security'],
+  'route.clear': ['campus'], 'workorder.prepare': ['latest','A','B','C'],
+  'report.show': ['occupancy', 'events', 'alerts', 'recommendation','daily','weekly','monthly','yearly','workorders','audit'],
+  'tour.start': ['campus','visitor','operations','night'], 'tour.pause': ['campus'], 'tour.resume': ['campus'], 'tour.stop': ['campus']
 };
+export function configureAgentTargets(tools:Record<string,string[]>) { for(const key of ['scene.poi','route.show'] as const) if(Array.isArray(tools[key])&&tools[key].length<=40&&tools[key].every(id=>/^[a-z][a-z0-9-]{1,39}$/.test(id)))TOOL_TARGETS[key]=[...tools[key]]; }
 export function parseAgentAction(input: unknown): AgentAction | null {
   if (!input || typeof input !== 'object') return null;
   const value = input as Record<string, unknown>;
@@ -30,7 +34,7 @@ export function parseAgentAction(input: unknown): AgentAction | null {
 export function parseAgentReport(input: unknown): AgentReport | null {
   if (!input || typeof input !== 'object') return null;
   const v = input as Record<string, unknown>;
-  if (v['source'] !== 'browser-demo' || typeof v['observedAt'] !== 'string' || !Number.isFinite(Date.parse(v['observedAt']))) return null;
+  if (!['browser-demo','database-synthetic'].includes(String(v['source'])) || typeof v['observedAt'] !== 'string' || !Number.isFinite(Date.parse(v['observedAt']))) return null;
   const integer = (n: unknown) => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 30000;
   const zone = (r: unknown) => {
     if (!r || typeof r !== 'object') return false;
@@ -40,6 +44,15 @@ export function parseAgentReport(input: unknown): AgentReport | null {
       && Number(z['occupied']) <= Number(z['capacity']) && Number(z['free']) === Number(z['capacity']) - Number(z['occupied']) && Number(z['rate']) <= 100;
   };
   const data = v['data'];
+  if(v['source']==='database-synthetic'){
+    if(v['kind']==='recommendation'&&data&&typeof data==='object'){
+      const d=data as Record<string,any>;if(Array.isArray(d['candidates'])&&d['candidates'].length<=40&&d['candidates'].every((c:any)=>c&&['A','B','C'].includes(c.zone)&&integer(c.free)&&Number.isFinite(c.meters)&&typeof c.reason==='string'&&c.reason.length<=1000))return input as AgentReport;
+    }
+    if(['daily','weekly','monthly','yearly'].includes(String(v['kind']))&&data&&typeof data==='object'){
+      const d=data as Record<string,any>;if(Array.isArray(d['occupancy'])&&d['occupancy'].length<=1100&&d['occupancy'].every((r:any)=>r&&['A','B','C'].includes(r.zone_id)&&Number.isFinite(r.average_occupied)&&Number(r.average_occupied)>=0&&Number.isFinite(r.capacity))&&d['ledger']&&Number.isFinite(Number(d['ledger'].paid_cents))&&Number(d['ledger'].paid_cents)>=0)return input as AgentReport;
+    }
+    if(['workorders','audit'].includes(String(v['kind']))&&Array.isArray(data)&&data.length<=100&&data.every(r=>r&&typeof r==='object'))return input as AgentReport;
+  }
   if (v['kind'] === 'recommendation' && zone(data)) return input as AgentReport;
   if (v['kind'] === 'occupancy' && data && typeof data === 'object') {
     const d = data as Record<string, unknown>;

@@ -5,7 +5,7 @@ import sys
 
 LOCATION = re.compile(
     r"(?m)^[ \t]*location (?:= /smartParking(?:/index\.html)?|\^~ /smartParking/|"
-    r"= /smartCockpit/api/parking-agent/stream)\s*\{"
+    r"= /smartCockpit/api/parking-agent/stream|= /smartCockpit/api/parking/(?:ag-ui|vision))\s*\{"
 )
 
 def update(routes: str, snippet: str) -> str:

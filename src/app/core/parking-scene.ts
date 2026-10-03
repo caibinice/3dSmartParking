@@ -36,6 +36,7 @@ export class ParkingScene {
   private camera?: ArcRotateCamera;
   private observer?: ResizeObserver;
   private glow?: GlowLayer;
+  private navigationLine?: LinesMesh;
   private vehicle?: TransformNode;
   private destroyed = false;
   private lastFrame = 0;
@@ -344,6 +345,19 @@ export class ParkingScene {
     }
   };
   updateZones(zones:Zone[]){this.zones=zones;}
+  focusPoint(x:number,z:number){if(Number.isFinite(x)&&Number.isFinite(z)&&Math.abs(x)<=40&&Math.abs(z)<=40)this.fly(new Vector3(x,.35,z),5.2,.9);}
+  showNavigation(points:[number,number][]){
+    this.clearNavigation();if(!this.scene||!points.length||points.length>40||!points.every(p=>p.length===2&&p.every(n=>Number.isFinite(n)&&Math.abs(n)<=40)))return;
+    this.navigationLine=CreateLines('assistant-navigation',{points:points.map(p=>new Vector3(p[0],.055,p[1]))},this.scene);
+    this.navigationLine.color=Color3.FromHexString('#79ddcf');this.navigationLine.isPickable=false;
+  }
+  clearNavigation(){this.navigationLine?.dispose();this.navigationLine=undefined;}
+  captureJpeg(){
+    if(!this.scene||!this.engine)throw new Error('请等待场景加载完成');this.scene.render();
+    const out=document.createElement('canvas'),scale=Math.min(1,1024/Math.max(this.canvas.width,this.canvas.height));
+    out.width=Math.max(64,Math.round(this.canvas.width*scale));out.height=Math.max(64,Math.round(this.canvas.height*scale));
+    out.getContext('2d')!.drawImage(this.canvas,0,0,out.width,out.height);return out.toDataURL('image/jpeg',.8);
+  }
   applyQuality(quality:Quality){
     this.quality=quality;this.adaptiveCadence=false;this.slowWindows=0;
     this.engine?.setHardwareScalingLevel(resolutionScale(quality,this.mobile,window.devicePixelRatio,this.canvas.clientWidth,this.canvas.clientHeight));
