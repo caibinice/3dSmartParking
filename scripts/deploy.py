@@ -24,7 +24,7 @@ if not stage.is_relative_to((ROOT / '.deploy').resolve()):
 target = stage / 'smartParking'
 shutil.copytree(source, target)
 for file in target.rglob('*'):
-    if file.is_file() and file.suffix in ('.js', '.css', '.glb', '.html', '.svg', '.json'):
+    if file.is_file() and file.suffix in ('.js', '.css', '.glb', '.html', '.svg', '.json', '.wasm'):
         with file.open('rb') as src, gzip.open(str(file) + '.gz', 'wb', compresslevel=9) as dst:
             shutil.copyfileobj(src, dst)
 archive = ROOT / '.deploy' / f'parking-{release}.tar.gz'
@@ -58,7 +58,7 @@ ln -sfn "$release" "$root/www.next"
 mv -Tf "$root/www.next" "$root/www"
 nginx -t
 systemctl reload nginx
-for path in /smartParking/ /smartParking/mobile /smartParking/models/campus-desktop-v2.glb /smartParking/models/campus-mobile-v2.glb /smartParking/models/vehicle-desktop-v3.glb /smartParking/models/vehicle-mobile-v3.glb /smartParking/models/vehicle-placements-v3.json /smartParking/models/vehicle-rig-v3.json /smartParking/models/traffic-routes-v3.json /smartParking/media/opening-v3.mp4; do
+for path in /smartParking/ /smartParking/mobile /smartParking/models/campus-desktop-v2.glb /smartParking/models/campus-mobile-v2.glb /smartParking/models/vehicle-desktop-v3.glb /smartParking/models/vehicle-mobile-v3.glb /smartParking/models/campus-desktop-v2-ktx2.glb /smartParking/models/campus-mobile-v2-ktx2.glb /smartParking/models/vehicle-desktop-v3-ktx2.glb /smartParking/models/vehicle-mobile-v3-ktx2.glb /smartParking/models/vehicle-desktop-v3-far.glb /smartParking/models/vehicle-mobile-v3-far.glb /smartParking/vendor/ktx2/9.29.0/decoder.js /smartParking/vendor/ktx2/9.29.0/uastc_bc7.wasm /smartParking/models/vehicle-placements-v3.json /smartParking/models/vehicle-rig-v3.json /smartParking/models/traffic-routes-v3.json /smartParking/media/opening-v3.mp4; do
  curl -fsS --resolve caibinice.com:443:127.0.0.1 "https://caibinice.com$path" -o /dev/null
 done
 trap - ERR

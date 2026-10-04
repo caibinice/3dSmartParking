@@ -16,8 +16,8 @@ export interface AgentReport {
 }
 export const TOOL_TARGETS: Record<AgentActionType, readonly string[]> = {
   'scene.focus': ['A', 'B', 'C', 'overview', 'top', 'vehicle'],
-  'scene.poi': ['entrance','exit','parking-a','parking-b','parking-c','outpatient','inpatient','emergency','charging','accessible','security'],
-  'route.show': ['entrance','exit','parking-a','parking-b','parking-c','outpatient','inpatient','emergency','charging','accessible','security'],
+  'scene.poi': ['entrance','exit','parking-a','parking-b','parking-c','parking-c-side','outpatient','inpatient','emergency','charging','accessible','security'],
+  'route.show': ['entrance','exit','parking-a','parking-b','parking-c','parking-c-side','outpatient','inpatient','emergency','charging','accessible','security'],
   'route.clear': ['campus'], 'workorder.prepare': ['latest','A','B','C'],
   'report.show': ['occupancy', 'events', 'alerts', 'recommendation','daily','weekly','monthly','yearly','workorders','audit'],
   'tour.start': ['campus','visitor','operations','night'], 'tour.pause': ['campus'], 'tour.resume': ['campus'], 'tour.stop': ['campus']

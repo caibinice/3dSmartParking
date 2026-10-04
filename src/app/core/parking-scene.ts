@@ -22,10 +22,14 @@ import { PointerEventTypes } from '@babylonjs/core/Events/pointerEvents';
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 import '@babylonjs/core/Culling/ray';
 import { INITIAL_ZONES, Quality, resolutionScale, ZoneId, Zone } from './parking-data';
+import { zoneView, C_SIDE_POSITION } from './parking-layout';
+import { ParkingVehicleBatches } from './parking-batches';
+import { ParkingRenderProfiler, type RenderProfile } from './parking-profiler';
+import { configureLocalKtxDecoder } from './parking-textures';
 import { nearestAngle, rollWheel, sampleRoute, tailCameraPose, type TrafficRoutes, type TrafficRoute, type VehicleRig } from './parking-traffic';
 
-export interface SceneStats { fps: number; meshes: number; backend: string; quality: string; renderWidth: number; renderHeight: number; }
-export interface ScenePin { id: ZoneId | 'vehicle'; x: number; y: number; visible: boolean; }
+export interface SceneStats { fps: number; meshes: number; backend: string; quality: string; renderWidth: number; renderHeight: number; profile?: RenderProfile; visibleParked?: number; parkedLod?: number; }
+export interface ScenePin { id: ZoneId | 'C-side' | 'vehicle'; x: number; y: number; visible: boolean; }
 export interface VehiclePick { parked: boolean; position: Vector3; index: number; }
 interface Flight { start: number; from: Vector3; to: Vector3; radiusFrom: number; radiusTo: number; betaFrom: number; betaTo: number; alphaFrom: number; alphaTo: number; }
 interface MovingVehicle { node: TransformNode; wheels: TransformNode[]; route: TrafficRoute; offset: number; speed: number; yaw: number; wheelAngle: number; previous?: Vector3; previousTime?: number; }
@@ -37,6 +41,8 @@ export class ParkingScene {
   private observer?: ResizeObserver;
   private glow?: GlowLayer;
   private navigationLine?: LinesMesh;
+  private batches?: ParkingVehicleBatches;
+  private profiler?: ParkingRenderProfiler;
   private vehicle?: TransformNode;
   private destroyed = false;
   private lastFrame = 0;
@@ -58,6 +64,8 @@ export class ParkingScene {
   private fleet: MovingVehicle[] = [];
   private rig?: VehicleRig;
   private selectedTrafficIndex = 0;
+  private ktxLoaded = 0;
+  private variantFallback = false;
   private routeLines: LinesMesh[] = [];
   private flight?: Flight;
   private zones: Zone[] = structuredClone(INITIAL_ZONES);
@@ -107,20 +115,20 @@ export class ParkingScene {
     this.createSiteGround();
     this.glow = new GlowLayer('architectural-glow', scene, { mainTextureFixedSize: this.mobile ? 512 : 1024, blurKernelSize: 16 });
     this.glow.intensity = .38;
-    const { ImportMeshAsync } = await import('@babylonjs/core/Loading/sceneLoader');
     await import('@babylonjs/loaders/glTF');
     if (this.destroyed) return '';
     const suffix = this.mobile ? 'mobile' : 'desktop';
+    const compressed = new URLSearchParams(location.search).get('textures') === 'ktx2';
+    const farLod = new URLSearchParams(location.search).get('lod') === 'far';
+    if (compressed) configureLocalKtxDecoder(this.mobile);
     onProgress('加载精细园区 · 建筑与道路纹理…');
-    const campus = await ImportMeshAsync(new URL(`models/campus-${suffix}-v2.glb?rev=gpu-cache-1`, document.baseURI).href, scene, {
-      onProgress: e => onProgress(e.lengthComputable ? `精细园区 ${Math.round(e.loaded/e.total*100)}%` : '加载精细园区…')
-    });
+    const campus = await this.loadModel(`campus-${suffix}-v2`, compressed, onProgress);
     if (this.destroyed) return '';
     for (const mesh of campus.meshes) { mesh.isPickable = false; mesh.renderingGroupId=mesh.material?.name.includes('ground')?0:1; mesh.computeWorldMatrix(true); mesh.freezeWorldMatrix(); mesh.doNotSyncBoundingInfo = true; }
     this.styleMaterials();
     onProgress('实例化精细车辆…');
     const [cars, placementResponse, routeResponse, rigResponse] = await Promise.all([
-      ImportMeshAsync(new URL(`models/vehicle-${suffix}-v3.glb?rev=gpu-cache-1`, document.baseURI).href, scene),
+      this.loadModel(`vehicle-${suffix}-v3`, compressed, onProgress),
       fetch(new URL('models/vehicle-placements-v3.json', document.baseURI)),
       fetch(new URL('models/traffic-routes-v3.json', document.baseURI)),
       fetch(new URL('models/vehicle-rig-v3.json', document.baseURI))
@@ -128,8 +136,24 @@ export class ParkingScene {
     if (this.destroyed) return '';
     if (!placementResponse.ok || !routeResponse.ok || !rigResponse.ok) throw new Error('Vehicle data failed');
     const placements = await placementResponse.json() as { matrices: number[][] };
+    this.batches = new ParkingVehicleBatches(placements.matrices, new URLSearchParams(location.search).get('instances') === 'single' ? 'single' : 'adaptive');
     const traffic = await routeResponse.json() as TrafficRoutes;
     this.rig = await rigResponse.json() as VehicleRig;
+    const lowMeshes = new Map<string, Mesh>();
+    if (farLod) {
+      const materials = new Set(scene.materials), textures = new Set(scene.textures);
+      try {
+        const low = await this.loadModel(`vehicle-${suffix}-v3-far`, false, onProgress);
+        for (const mesh of low.meshes) if (mesh instanceof Mesh && mesh.getTotalVertices()) {
+          const high = cars.meshes.find(m => m.name === mesh.name);
+          if (high?.material) { mesh.material = high.material; mesh.setEnabled(false); lowMeshes.set(mesh.name, mesh); }
+        }
+        // The far mesh reuses the original materials/textures, not a second
+        // decoded copy of the same texture set.
+        scene.materials.filter(m => !materials.has(m)).forEach(m => m.dispose());
+        scene.textures.filter(t => !textures.has(t)).forEach(t => t.dispose());
+      } catch { this.variantFallback = true; onProgress('远景 LOD 已回退至原始精细车辆…'); }
+    }
     this.fleet = traffic.vehicles.map((definition, i) => {
       const route = traffic.routes.find(r => r.id === definition.route)!;
       const node = new TransformNode(`moving-vehicle-${i}`, scene);
@@ -174,10 +198,30 @@ export class ParkingScene {
       // nor their identity parent transform change after loading.
       mesh.computeWorldMatrix(true); mesh.freezeWorldMatrix(); mesh.doNotSyncBoundingInfo = true;
       mesh.alwaysSelectAsActiveMesh = true;
+      this.batches.add(mesh, templateMatrix, lowMeshes.get(mesh.name));
     }
+    this.batches.setLod(farLod && lowMeshes.size > 0);
     this.styleMaterials();
     this.createSign();
     this.updateVehicle(0);
+    onProgress('预热材质与渲染管线…');
+    // Prepare both single-instance and thin-instance defines before revealing
+    // the scene. No camera/vehicle motion or image-quality setting is changed.
+    const warmup = new Map<string, Promise<void>>();
+    for (const mesh of scene.meshes) if (mesh.material && mesh.getTotalVertices() && mesh.isEnabled()) {
+      const key = `${mesh.material.uniqueId}:${mesh.hasThinInstances ? 1 : 0}`;
+      if (!warmup.has(key)) warmup.set(key, mesh.material.forceCompilationAsync(mesh, { useInstances: mesh.hasThinInstances }));
+    }
+    await Promise.all(warmup.values());
+    if (this.destroyed) return '';
+    await scene.whenReadyAsync();
+    this.batches.update(this.camera, this.engine.getRenderHeight());
+    // Prime Glow and blend shaders behind the existing opening animation.
+    for (let i = 0; i < 2; i++) {
+      this.engine.beginFrame(); scene.render(); this.engine.endFrame();
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      if (this.destroyed) return '';
+    }
     // Freeze immutable shaders, never dynamic vehicle transforms or camera controls.
     scene.materials.forEach(m => m.freeze());
     scene.onPointerObservable.add(info => {
@@ -192,8 +236,34 @@ export class ParkingScene {
     document.addEventListener('visibilitychange',this.onVisibility);
     this.lastStats = performance.now();
     this.engine.runRenderLoop(this.render);
+    if (new URLSearchParams(location.search).get('profile') === '1') this.setProfiling(true);
     this.onStats({fps:0,meshes:scene.meshes.length,backend:this.backend,quality:this.quality,renderWidth:this.engine.getRenderWidth(),renderHeight:this.engine.getRenderHeight()});
-    return this.mobile ? '精细园区 · 移动 LOD · 126 辆实例化车辆' : '精细园区 · 原始建筑细节 · 126 辆实例化车辆';
+    return `精细园区 · ${this.mobile ? '移动 LOD' : '原始建筑细节'} · 126 辆实例化车辆${this.ktxLoaded ? ' · KTX2 保真纹理' : ''}${this.variantFallback ? ' · 原图回退已生效' : ''}`;
+  }
+
+  private async loadModel(name: string, compressed: boolean, onProgress: (value: string) => void) {
+    const { ImportMeshAsync } = await import('@babylonjs/core/Loading/sceneLoader');
+    const scene = this.scene!;
+    const load = async (variant: boolean) => {
+      const meshes = new Set(scene.meshes), nodes = new Set(scene.transformNodes), materials = new Set(scene.materials), textures = new Set(scene.textures);
+      try {
+        return await ImportMeshAsync(new URL(`models/${name}${variant ? '-ktx2' : ''}.glb?rev=render-2`, document.baseURI).href, scene,
+          { onProgress: e => onProgress(e.lengthComputable ? `精细模型 ${Math.round(e.loaded / e.total * 100)}%` : '加载精细模型…') });
+      } catch (error) {
+        // Dispose only resources introduced by this import. Preserve the campus,
+        // shared lights and any previously loaded original model on fallback.
+        scene.meshes.filter(m => !meshes.has(m)).forEach(m => m.dispose(false, false));
+        scene.transformNodes.filter(n => !nodes.has(n)).forEach(n => n.dispose(false, false));
+        scene.materials.filter(m => !materials.has(m)).forEach(m => m.dispose());
+        scene.textures.filter(t => !textures.has(t)).forEach(t => t.dispose());
+        throw error;
+      }
+    };
+    if (compressed) {
+      try { const result = await load(true); this.ktxLoaded++; return result; }
+      catch (error) { if (this.destroyed) throw error; this.variantFallback = true; onProgress('压缩纹理加载中断，正在回退原图…'); }
+    }
+    return load(false);
   }
 
   private styleMaterials() {
@@ -285,7 +355,8 @@ export class ParkingScene {
   private pickVehicle(pick:PickingInfo){
     if(!pick.pickedPoint)return;
     const parked = !!pick.pickedMesh?.metadata?.parked;
-    this.onPick('vehicle',{parked,position:pick.pickedPoint.clone(),index:parked?pick.thinInstanceIndex:pick.pickedMesh!.metadata.trafficIndex});
+    const parkedIndex = pick.pickedMesh?.metadata?.parkedIndices?.[pick.thinInstanceIndex] ?? pick.thinInstanceIndex;
+    this.onPick('vehicle',{parked,position:pick.pickedPoint.clone(),index:parked?parkedIndex:pick.pickedMesh!.metadata.trafficIndex});
   }
   private fly(to:Vector3,radius:number,beta=.85,alpha=this.camera?.alpha??-Math.PI/2) {
     if(!this.camera)return;
@@ -343,17 +414,18 @@ export class ParkingScene {
     }
     if(this.orbit)this.camera.alpha+=delta*.065;
     if(this.follow&&!this.flight)this.applyTailCamera();
+    this.batches?.update(this.camera, this.engine.getRenderHeight());
     this.scene.render();this.renderedFrames++;
     if(now-this.lastProjection>50){
       const viewport=this.camera.viewport.toGlobal(this.engine.getRenderWidth(),this.engine.getRenderHeight());
-      const project=(id:ZoneId|'vehicle',position:Vector3):ScenePin=>{const p=Vector3.Project(position,Matrix.IdentityReadOnly,this.scene!.getTransformMatrix(),viewport);return{id,x:p.x/this.engine!.getRenderWidth()*this.canvas.clientWidth,y:p.y/this.engine!.getRenderHeight()*this.canvas.clientHeight,visible:p.z>0&&p.z<1&&p.x>0&&p.y>0&&p.x<viewport.width&&p.y<viewport.height};};
-      this.onProject([...this.zones.map(z=>project(z.id,new Vector3(z.position[0],.5,z.position[1]))),...(this.vehicle?[project('vehicle',this.vehicle.position.add(new Vector3(0,.5,0)))]:[])]);
+      const project=(id:ScenePin['id'],position:Vector3):ScenePin=>{const p=Vector3.Project(position,Matrix.IdentityReadOnly,this.scene!.getTransformMatrix(),viewport);return{id,x:p.x/this.engine!.getRenderWidth()*this.canvas.clientWidth,y:p.y/this.engine!.getRenderHeight()*this.canvas.clientHeight,visible:p.z>0&&p.z<1&&p.x>0&&p.y>0&&p.x<viewport.width&&p.y<viewport.height};};
+      this.onProject([...this.zones.map(z=>project(z.id,new Vector3(z.position[0],.5,z.position[1]))),project('C-side',new Vector3(C_SIDE_POSITION.x,.5,C_SIDE_POSITION.z)),...(this.vehicle?[project('vehicle',this.vehicle.position.add(new Vector3(0,.5,0)))]:[])]);
       this.lastProjection=now;
     }
     if(now-this.lastStats>1500){
       const fps=Math.round(this.renderedFrames*1000/(now-this.lastStats));this.slowWindows=fps<22?this.slowWindows+1:0;
       if(this.quality==='auto'&&this.slowWindows>=3&&!this.adaptiveCadence){this.adaptiveCadence=true;if(this.glow)this.glow.isEnabled=false;}
-      this.onStats({fps,meshes:this.scene.meshes.length,backend:this.backend,quality:this.adaptiveCadence?'清晰优先 · 节能帧率':this.quality,renderWidth:this.engine.getRenderWidth(),renderHeight:this.engine.getRenderHeight()});
+      this.onStats({fps,meshes:this.scene.meshes.length,backend:this.backend,quality:this.adaptiveCadence?'清晰优先 · 节能帧率':this.quality,renderWidth:this.engine.getRenderWidth(),renderHeight:this.engine.getRenderHeight(),profile:this.profiler?.snapshot(),visibleParked:this.batches?.visibleInstances,parkedLod:this.batches?.selectedLod});
       this.lastStats=now;this.renderedFrames=0;
     }
   };
@@ -366,7 +438,7 @@ export class ParkingScene {
   }
   clearNavigation(){this.navigationLine?.dispose();this.navigationLine=undefined;}
   captureJpeg(){
-    if(!this.scene||!this.engine)throw new Error('请等待场景加载完成');this.scene.render();
+    if(!this.scene||!this.engine)throw new Error('请等待场景加载完成');this.engine.beginFrame();this.scene.render();this.engine.endFrame();
     const out=document.createElement('canvas'),scale=Math.min(1,1024/Math.max(this.canvas.width,this.canvas.height));
     out.width=Math.max(64,Math.round(this.canvas.width*scale));out.height=Math.max(64,Math.round(this.canvas.height*scale));
     out.getContext('2d')!.drawImage(this.canvas,0,0,out.width,out.height);return out.toDataURL('image/jpeg',.8);
@@ -378,7 +450,8 @@ export class ParkingScene {
   }
   setOrbit(value:boolean){this.flight=undefined;this.setFollowing(false);this.orbit=value;}
   setPaused(value:boolean){this.vehiclePaused=value;}
-  focusZone(id:ZoneId){const zone=this.zones.find(z=>z.id===id);if(zone)this.fly(new Vector3(zone.position[0],.25,zone.position[1]),9,.65);}
+  setProfiling(value:boolean){this.profiler?.dispose();this.profiler=value&&this.scene&&this.engine?new ParkingRenderProfiler(this.scene,this.engine):undefined;}
+  focusZone(id:ZoneId){const view=zoneView(id);this.fly(new Vector3(view.x,.25,view.z),view.radius,view.beta);}
   focusVehicle(position?:Vector3,index=0){
     if(!this.fleet.length)return;
     if(position){this.fly(position,1.6,.96);return;}
@@ -389,5 +462,5 @@ export class ParkingScene {
   followVehicle(value:boolean){this.setFollowing(value);this.orbit=false;this.flight=undefined;if(value)this.applyTailCamera();}
   reset(){this.fly(new Vector3(0,.8,1.3),this.overviewRadius(),.79,-Math.PI/2);}
   top(){this.fly(new Vector3(0,0,1.3),this.overviewRadius()+1,.15,-Math.PI/2);}
-  dispose(){this.destroyed=true;this.observer?.disconnect();this.removeTouch?.();document.removeEventListener('visibilitychange',this.onVisibility);this.engine?.stopRenderLoop();this.scene?.dispose();this.engine?.dispose();}
+  dispose(){this.destroyed=true;this.profiler?.dispose();this.observer?.disconnect();this.removeTouch?.();document.removeEventListener('visibilitychange',this.onVisibility);this.engine?.stopRenderLoop();this.batches?.dispose();this.scene?.dispose();this.engine?.dispose();}
 }

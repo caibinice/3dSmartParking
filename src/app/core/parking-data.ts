@@ -1,11 +1,12 @@
+import { zonePosition } from './parking-layout';
 export type ZoneId = 'A' | 'B' | 'C';
 export interface Zone { id: ZoneId; name: string; capacity: number; occupied: number; color: string; position: [number, number]; }
 export interface ParkingEvent { id: number; plate: string; zone: ZoneId; action: '入场' | '离场'; time: string; }
 export interface Alarm { id: number; zone: ZoneId; title: string; level: '高' | '中' | '低'; acknowledged: boolean; }
 export const INITIAL_ZONES: Zone[] = [
-  { id: 'A', name: '门诊停车区', capacity: 120, occupied: 86, color: '#43dfc4', position: [0, 2] },
-  { id: 'B', name: '住院停车区', capacity: 100, occupied: 62, color: '#64a7ff', position: [-7.5, 4.2] },
-  { id: 'C', name: '急诊停车区', capacity: 80, occupied: 41, color: '#ffbe6a', position: [9.2, .5] }
+  { id: 'A', name: '门诊停车区', capacity: 120, occupied: 86, color: '#43dfc4', position: zonePosition('A') },
+  { id: 'B', name: '住院停车区', capacity: 100, occupied: 62, color: '#64a7ff', position: zonePosition('B') },
+  { id: 'C', name: '急诊停车区', capacity: 80, occupied: 41, color: '#ffbe6a', position: zonePosition('C') }
 ];
 export const INITIAL_ALARMS: Alarm[] = [
   { id: 1, zone: 'A', title: '入口排队超过预设阈值', level: '中', acknowledged: false },

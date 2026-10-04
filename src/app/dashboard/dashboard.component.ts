@@ -50,6 +50,10 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   readonly activeAlarms=computed(()=>this.store.alarms().filter(a=>!a.acknowledged).length);
   readonly recommended=computed(()=>[...this.store.zones()].sort((a,b)=>b.capacity-b.occupied-(a.capacity-a.occupied))[0]);
   quality:Quality='auto';
+  textures=new URLSearchParams(location.search).get('textures')==='ktx2'?'ktx2':'original';
+  farLod=new URLSearchParams(location.search).get('lod')==='far';
+  renderer=new URLSearchParams(location.search).get('renderer')==='webgpu'?'webgpu':'webgl';
+  readonly profiling=signal(new URLSearchParams(location.search).get('profile')==='1');
   readonly trend=[24,31,27,42,58,65,72,66,54,49,61,63];
   private scene?:ParkingScene;
   private timer?:ReturnType<typeof setInterval>;
@@ -102,6 +106,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   togglePause(){this.paused.update(v=>!v);this.scene?.setPaused(this.paused());}
   toggleClean(){this.clean.update(v=>!v);this.assistant?.hide();if(this.clean()){this.stopTour();this.assistant?.voice.stop();}this.panel.set(null);this.help.set(false);this.selected.set(null);this.vehicleSelected.set(false);this.scene?.showRoute(false);}
   changeQuality(){this.scene?.applyQuality(this.quality);}
+  changeProfiling(value:boolean){this.profiling.set(value);this.scene?.setProfiling(value);}
+  reloadRenderMode(key:string,value:string){const url=new URL(location.href);if(value)url.searchParams.set(key,value);else url.searchParams.delete(key);location.assign(url.href);}
   acknowledge(id:number){this.store.acknowledge(id);this.message('演示告警已确认');}
   exportEvents(){
     const rows=[['时间','模拟车牌','区域','动作'],...this.filteredEvents().map(e=>[e.time,e.plate,e.zone,e.action])];

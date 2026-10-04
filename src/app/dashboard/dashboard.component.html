@@ -17,6 +17,7 @@
   </header>
   <div #pins class="scene-pins" [class.hidden]="!ready() || !showPins() || clean()">
     @for(zone of store.zones();track zone.id){<button class="scene-pin" [style.--pin-color]="zone.color" [attr.data-pin]="zone.id" [attr.aria-label]="'定位'+zone.name" [class.selected]="selected()===zone.id" (click)="selectZone(zone.id)"><span>{{zone.id}}</span><small>{{zone.name}}</small><i></i></button>}
+    <button class="scene-pin" style="--pin-color:#ffb25d" data-pin="C-side" aria-label="定位急诊停车区左侧" [class.selected]="selected()==='C'" (click)="selectZone('C')"><span>C</span><small>急诊停车区 · 左侧</small><i></i></button>
     <button class="scene-pin vehicle-pin" data-pin="vehicle" aria-label="查看演示车辆" (click)="selectVehicle()"><span><svg><use href="#i-car"/></svg></span><small>演示车辆</small><i></i></button>
   </div>
   @if(!ready() || !introDone()){
@@ -56,8 +57,13 @@
         @if(panel()==='settings'){
           <label class="setting-row"><span>渲染清晰度</span><select aria-label="画质档位" [(ngModel)]="quality" (change)="changeQuality()"><option value="auto">清晰优先（自动）</option><option value="high">超清</option><option value="balanced">均衡</option><option value="low">原生分辨率 · 节能</option></select></label>
           <label class="setting-row"><span>场景定位点</span><input type="checkbox" [ngModel]="showPins()" (ngModelChange)="showPins.set($event)"></label>
+          <label class="setting-row"><span>性能分通道采样</span><input type="checkbox" aria-label="性能分通道采样" [ngModel]="profiling()" (ngModelChange)="changeProfiling($event)"></label>
+          <label class="setting-row"><span>纹理方案 · 切换后重载</span><select aria-label="纹理方案" [(ngModel)]="textures" (change)="reloadRenderMode('textures',textures==='ktx2'?'ktx2':'')"><option value="original">原始纹理（默认）</option><option value="ktx2">KTX2 · 显存优化试验</option></select></label>
+          <label class="setting-row"><span>远景车辆 LOD · 重载</span><input type="checkbox" aria-label="远景车辆 LOD" [ngModel]="farLod" (ngModelChange)="reloadRenderMode('lod',$event?'far':'')"></label>
+          <label class="setting-row"><span>渲染后端 · 切换后重载</span><select aria-label="渲染后端" [(ngModel)]="renderer" (change)="reloadRenderMode('renderer',renderer==='webgpu'?'webgpu':'')"><option value="webgl">WebGL（默认）</option><option value="webgpu">WebGPU（实验）</option></select></label>
           <button class="setting-row" (click)="togglePause()"><span>模拟数据与车辆</span><b>{{paused()?'继续播放':'暂停演示'}}</b></button>
           <div class="render-info"><b>{{stats().backend}} · {{stats().fps?stats().fps+' FPS':'采样中'}}</b><span>渲染 {{stats().renderWidth}} × {{stats().renderHeight}} · {{stats().meshes}} Mesh</span><span>{{status()}}</span><small>自动策略先减少光效和帧率，保留原生以上的像素清晰度。</small></div>
+          @if(profiling() && stats().profile;as profile){<div class="render-info"><b>性能采样 · {{profile.draws}} Draw · {{stats().visibleParked}} / 126 辆停放车</b><span>CPU 整帧 {{profile.cpuFrameMs.toFixed(2)}} ms · Glow RTT {{profile.cpuGlowMs.toFixed(2)}} ms</span><span>CPU 不透明 {{profile.cpuOpaqueMs.toFixed(2)}} ms · 透明 {{profile.cpuTransparentMs.toFixed(2)}} ms · 裁剪 {{profile.cpuSelectionMs.toFixed(2)}} ms</span><span>{{profile.gpuStatus}}{{profile.gpuFrameMs!==null?' · '+profile.gpuFrameMs.toFixed(2)+' ms':''}}</span><small>CPU 提交时间与 GPU 查询分开显示；分通道采样仅在启用时运行。</small></div>}
           <a class="mode-link" [routerLink]="mobile?'/':'/mobile'">{{mobile?'打开桌面版':'打开手机专用横屏版'}} ↗</a><div class="help-links"><a href="https://github.com/caibinice/3dSmartParking" target="_blank" rel="noopener noreferrer">项目源码 ↗</a><a href="https://caibinice.com/" target="_blank" rel="noopener noreferrer">Fish 的博客 ↗</a></div>
         }
       </div>

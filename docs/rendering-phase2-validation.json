@@ -1,0 +1,1006 @@
+{
+  "date": "2026-10-04",
+  "viewportSimulationNotRealDevice": true,
+  "desktopDefault": [
+    {
+      "view": "overview",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    },
+    {
+      "view": "building",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    },
+    {
+      "view": "parking",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    },
+    {
+      "view": "vehicle",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    }
+  ],
+  "mobileDefault": [
+    {
+      "view": "overview",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    },
+    {
+      "view": "building",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    },
+    {
+      "view": "parking",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    },
+    {
+      "view": "vehicle",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    }
+  ],
+  "desktopKtxAndLod": [
+    {
+      "view": "overview",
+      "meanChannelDifference": 0.03731455761316872,
+      "changedPercent": 1.3360082304526748,
+      "max": 47,
+      "psnr": 53.933221519124004
+    },
+    {
+      "view": "building",
+      "meanChannelDifference": 0.017899691358024692,
+      "changedPercent": 0.4974537037037037,
+      "max": 49,
+      "psnr": 54.9180996695859
+    },
+    {
+      "view": "parking",
+      "meanChannelDifference": 0.12160519547325103,
+      "changedPercent": 2.766512345679012,
+      "max": 58,
+      "psnr": 46.005026626013745
+    },
+    {
+      "view": "vehicle",
+      "meanChannelDifference": 0.006188271604938272,
+      "changedPercent": 0.4148662551440329,
+      "max": 31,
+      "psnr": 64.80880955466203
+    }
+  ],
+  "mobileKtxAndLod": [
+    {
+      "view": "overview",
+      "meanChannelDifference": 0.03947522987807348,
+      "changedPercent": 1.4805363146595374,
+      "max": 22,
+      "psnr": 55.96474773498138
+    },
+    {
+      "view": "building",
+      "meanChannelDifference": 0.01579069955847207,
+      "changedPercent": 0.5002632964718273,
+      "max": 49,
+      "psnr": 56.1018750518827
+    },
+    {
+      "view": "parking",
+      "meanChannelDifference": 0.12312148094138615,
+      "changedPercent": 2.9346417142625674,
+      "max": 57,
+      "psnr": 45.88568793172142
+    },
+    {
+      "view": "vehicle",
+      "meanChannelDifference": 0.01436180985944019,
+      "changedPercent": 1.0360716166403372,
+      "max": 23,
+      "psnr": 62.44745052999995
+    }
+  ],
+  "mobileLodOnly": [
+    {
+      "view": "overview",
+      "meanChannelDifference": 0.0007260906550006076,
+      "changedPercent": 0.03959573864787135,
+      "max": 17,
+      "psnr": 74.43057673885755
+    },
+    {
+      "view": "building",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    },
+    {
+      "view": "parking",
+      "meanChannelDifference": 6.886215417021104e-05,
+      "changedPercent": 0.0055697330578847164,
+      "max": 3,
+      "psnr": 87.99008497477809
+    },
+    {
+      "view": "vehicle",
+      "meanChannelDifference": 0,
+      "changedPercent": 0,
+      "max": 0,
+      "psnr": 99
+    }
+  ],
+  "profile": {
+    "backend": "WebGL",
+    "glInfo": {
+      "vendor": "Google Inc. (Intel)",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "samples": [
+      {
+        "view": "overview",
+        "mode": "single",
+        "visible": 126,
+        "renderWidth": 2880,
+        "renderHeight": 1800,
+        "cpuFrameMs": 4.115384609271318,
+        "cpuRenderMs": 2.043589738699106,
+        "cpuGlowMs": 1.5230769163522966,
+        "cpuSelectionMs": 0.3820512844966008,
+        "cpuOpaqueMs": 1.0950000037749608,
+        "cpuTransparentMs": 0.30833333134651186,
+        "gpuFrameMs": null,
+        "gpuStatus": "GPU 查询尚未形成稳定有效样本",
+        "draws": 242,
+        "samples": 120
+      },
+      {
+        "view": "overview",
+        "mode": "adaptive",
+        "visible": 126,
+        "renderWidth": 2880,
+        "renderHeight": 1800,
+        "cpuFrameMs": 3.856410264968872,
+        "cpuRenderMs": 1.8512820525047107,
+        "cpuGlowMs": 1.4794871837664874,
+        "cpuSelectionMs": 0.38205127838330394,
+        "cpuOpaqueMs": 1.1733333130677541,
+        "cpuTransparentMs": 0.32500000794728595,
+        "gpuFrameMs": null,
+        "gpuStatus": "GPU 查询尚未形成稳定有效样本",
+        "draws": 242,
+        "samples": 120
+      },
+      {
+        "view": "parking",
+        "mode": "single",
+        "visible": 126,
+        "renderWidth": 2880,
+        "renderHeight": 1800,
+        "cpuFrameMs": 3.1552631635414925,
+        "cpuRenderMs": 1.5131579010110152,
+        "cpuGlowMs": 1.1421052562563043,
+        "cpuSelectionMs": 0.33684210400832326,
+        "cpuOpaqueMs": 0.9174999972184499,
+        "cpuTransparentMs": 0.29083333214124046,
+        "gpuFrameMs": null,
+        "gpuStatus": "GPU 查询尚未形成稳定有效样本",
+        "draws": 146,
+        "samples": 120
+      },
+      {
+        "view": "parking",
+        "mode": "adaptive",
+        "visible": 126,
+        "renderWidth": 2880,
+        "renderHeight": 1800,
+        "cpuFrameMs": 3.1837837760512895,
+        "cpuRenderMs": 1.6081081048862353,
+        "cpuGlowMs": 1.1405405547167804,
+        "cpuSelectionMs": 0.33513510871577906,
+        "cpuOpaqueMs": 0.989999994635582,
+        "cpuTransparentMs": 0.289166667064031,
+        "gpuFrameMs": null,
+        "gpuStatus": "GPU 查询尚未形成稳定有效样本",
+        "draws": 146,
+        "samples": 120
+      },
+      {
+        "view": "vehicle",
+        "mode": "single",
+        "visible": 126,
+        "renderWidth": 2880,
+        "renderHeight": 1800,
+        "cpuFrameMs": 2.5499999986754522,
+        "cpuRenderMs": 1.30925926455745,
+        "cpuGlowMs": 0.8703703659552114,
+        "cpuSelectionMs": 0.29814814417450514,
+        "cpuOpaqueMs": 0.7108333269755046,
+        "cpuTransparentMs": 0.23250000178813934,
+        "gpuFrameMs": null,
+        "gpuStatus": "GPU 查询尚未形成稳定有效样本",
+        "draws": 174,
+        "samples": 120
+      },
+      {
+        "view": "vehicle",
+        "mode": "adaptive",
+        "visible": 32,
+        "renderWidth": 2880,
+        "renderHeight": 1800,
+        "cpuFrameMs": 2.0166666728478893,
+        "cpuRenderMs": 0.9277777760117142,
+        "cpuGlowMs": 0.7370370427767435,
+        "cpuSelectionMs": 0.27407407760620117,
+        "cpuOpaqueMs": 0.7124999950329463,
+        "cpuTransparentMs": 0.19999999006589253,
+        "gpuFrameMs": 0.7962651999999999,
+        "gpuStatus": "GPU 查询 · 整帧",
+        "draws": 174,
+        "samples": 120
+      }
+    ]
+  },
+  "unitTests": {
+    "frontend": 32,
+    "backend": 58
+  },
+  "localFallback": {
+    "webgpuUnsupportedToWebgl": true,
+    "ktxAssetAbortToOriginal": true
+  },
+  "online": {
+    "parkingRelease": "20261004102223",
+    "cockpitRelease": "20261004101928-46fd7a0-backend",
+    "servicesActive": true,
+    "nginxValid": true,
+    "assetHashes": [
+      {
+        "file": "models/campus-desktop-v2-ktx2.glb",
+        "sha256": "c5baea5569aa66197a1ef88b84cc1835d4ebfd4cdf40ef9280aa6cabcd0a7890",
+        "matched": true
+      },
+      {
+        "file": "models/campus-desktop-v2.glb",
+        "sha256": "fa5cc437882bc729ceba24691cb0bfc74e9b72a73872ec9008480ddf380dad29",
+        "matched": true
+      },
+      {
+        "file": "models/campus-mobile-v2-ktx2.glb",
+        "sha256": "88adea8a1eef36228db4ea03622b233b8912aaab22ab44f29b7b7cc3d3b6f590",
+        "matched": true
+      },
+      {
+        "file": "models/campus-mobile-v2.glb",
+        "sha256": "93e8c97dbcb76251cbf3c18dfd2bef62c46646c00d08b7d2e1f821da27e4e039",
+        "matched": true
+      },
+      {
+        "file": "models/vehicle-desktop-v2.glb",
+        "sha256": "9dea1dfb0975a779dfccc275d76c776012d02c7730b645039e4b8e600a1e43c0",
+        "matched": true
+      },
+      {
+        "file": "models/vehicle-desktop-v3-far.glb",
+        "sha256": "335e99cd3976adcbdc20a0a2b806a4b0db1b1bab7795d783a8864bc9da54a031",
+        "matched": true
+      },
+      {
+        "file": "models/vehicle-desktop-v3-ktx2.glb",
+        "sha256": "7cecebe1b5876bdd2a5e2c060a05e7b88cb11cfeca52a614a29a79351ac50e96",
+        "matched": true
+      },
+      {
+        "file": "models/vehicle-desktop-v3.glb",
+        "sha256": "b2999fc50266ed789fdc1a5f8c86e5f764e936a6fa8d1475692dc7c14c8bfe4c",
+        "matched": true
+      },
+      {
+        "file": "models/vehicle-mobile-v2.glb",
+        "sha256": "dcae858c871999ebcd0fa5518e95d8386b4681f817c23a3a1cb869771114eedb",
+        "matched": true
+      },
+      {
+        "file": "models/vehicle-mobile-v3-far.glb",
+        "sha256": "0be361c8592d3a8872143d2a3e4b846350ad2d727895d4e1a9e691ddabee6f93",
+        "matched": true
+      },
+      {
+        "file": "models/vehicle-mobile-v3-ktx2.glb",
+        "sha256": "324c398fe27d3a743866e8afb6e321356957a84abc800a2c86b22aa794d76b0c",
+        "matched": true
+      },
+      {
+        "file": "models/vehicle-mobile-v3.glb",
+        "sha256": "470b1c0e6213cc225c457b341dae52bf727155867523559f254075f28d027a31",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/decoder.js",
+        "sha256": "f524693315993bcc70acafec0dfcba00197707760afae0988d379fadd95052b3",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/license.md",
+        "sha256": "9362ea9ea17cb221a20cbbd63f404710834cc273d2a9a7b60314fd68ab702cd6",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/manifest.json",
+        "sha256": "aafaf05750b2b3ac1c4c7f71f71de2cae9ae80740bb52c411f143d13f7810327",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/msc_basis_transcoder.js",
+        "sha256": "b8906bae7e55606aba070642eb3bce790a2b5aea774874e120e9fd41f7c7d60b",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/msc_basis_transcoder.wasm",
+        "sha256": "29becbf0eef2ce9f6d72109ad217704ec3799c432da0c26e3893b793ecab6bdc",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/NOTICE.md",
+        "sha256": "a08d8fde9948804d9c771da238d5b34e284caca5dc269dcf3c443fbd18fca7db",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/uastc_astc.wasm",
+        "sha256": "6846c972b4a52d938866f43896fd2b2450052da807cdd1285e898be80614d612",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/uastc_bc7.wasm",
+        "sha256": "be442ab8c0cbf734ded98e6ad38112aaba23c83bfeecac4213ded54631fc4eef",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/uastc_r8_unorm.wasm",
+        "sha256": "0467c98b150a630e5a51f7810843e8b7fd9aad22e3888baf70aad255c55d02bc",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/uastc_rg8_unorm.wasm",
+        "sha256": "fb45a2c103c59cec21c3708a6534d43cd4381669f66d3292dd8a6e4e1956d773",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/uastc_rgba8_srgb_v2.wasm",
+        "sha256": "1f4d2e8bfef4e31679b23d473e1c410c29f7e485a739e76c5b357628f4190874",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/uastc_rgba8_unorm_v2.wasm",
+        "sha256": "b7470b26a847994cdeb9226eeba1e3711688e378ee438b7dd941e83cb598b694",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/wasm-license.md",
+        "sha256": "a5f49089897509e43a03cfb81e1fd689e3b9e00f3381c5ec74a12cb716c7df49",
+        "matched": true
+      },
+      {
+        "file": "vendor/ktx2/9.29.0/zstddec.wasm",
+        "sha256": "67d12d34f82ef700ec3a3795a77590252858c70330908a87ed1e73efc268cb4b",
+        "matched": true
+      }
+    ],
+    "pages": [
+      {
+        "path": "/",
+        "status": 200,
+        "title": "鱼非鱼"
+      },
+      {
+        "path": "/articles",
+        "status": 200,
+        "title": "鱼非鱼"
+      },
+      {
+        "path": "/projects",
+        "status": 200,
+        "title": "鱼非鱼"
+      },
+      {
+        "path": "/quant/",
+        "status": 200,
+        "title": "AI 量化研究舱"
+      },
+      {
+        "path": "/crossBorderTrend/",
+        "status": 200,
+        "title": "Northstar 跨境趋势情报"
+      },
+      {
+        "path": "/smartCockpit/",
+        "status": 200,
+        "title": "Enterprise AI Cockpit"
+      },
+      {
+        "path": "/smartParking/",
+        "status": 200,
+        "title": "智慧停车 · 三维数字孪生"
+      },
+      {
+        "path": "/smartParking/mobile",
+        "status": 200,
+        "title": "智慧停车 · 三维数字孪生"
+      }
+    ],
+    "decoderHttp": [
+      {
+        "file": "decoder.js",
+        "type": "application/javascript",
+        "cache": "max-age=31536000",
+        "shaMatched": true
+      },
+      {
+        "file": "uastc_bc7.wasm",
+        "type": "application/wasm",
+        "cache": "max-age=31536000",
+        "shaMatched": true
+      },
+      {
+        "file": "msc_basis_transcoder.wasm",
+        "type": "application/wasm",
+        "cache": "max-age=31536000",
+        "shaMatched": true
+      }
+    ],
+    "routes": [
+      {
+        "target": "parking-a",
+        "lastPoint": [
+          0,
+          2
+        ],
+        "points": 3,
+        "meters": 220,
+        "version": 2
+      },
+      {
+        "target": "parking-b",
+        "lastPoint": [
+          -8,
+          -2
+        ],
+        "points": 4,
+        "meters": 300,
+        "version": 2
+      },
+      {
+        "target": "parking-c",
+        "lastPoint": [
+          10.8,
+          5.2
+        ],
+        "points": 6,
+        "meters": 584,
+        "version": 2
+      },
+      {
+        "target": "parking-c-side",
+        "lastPoint": [
+          10.2,
+          -1.9
+        ],
+        "points": 5,
+        "meters": 454,
+        "version": 2
+      }
+    ],
+    "catalog": {
+      "version": 2,
+      "nodes": 17,
+      "cSideAvailable": true,
+      "tourUpdated": true
+    },
+    "passed": true
+  },
+  "trafficRuntime": {
+    "fleet": [
+      {
+        "moved": 0.33668590607179644,
+        "wheelChanged": true
+      },
+      {
+        "moved": 0.6693290759865528,
+        "wheelChanged": true
+      },
+      {
+        "moved": 0.9273873534974337,
+        "wheelChanged": true
+      }
+    ],
+    "tailDistance": [
+      0.6499999999999996,
+      0.6500000000000004
+    ],
+    "tailHeight": [
+      0.25,
+      0.25
+    ]
+  },
+  "onlineApi": {
+    "apiBase": "https://caibinice.com/smartCockpit/api/parking",
+    "cases": 31,
+    "passed": 31,
+    "results": [
+      {
+        "name": "anonymous snapshot requires authentication",
+        "passed": true,
+        "elapsedMs": 2234,
+        "detail": null
+      },
+      {
+        "name": "visitor denied /analytics?from=2025-10-03&to=2026-10-02",
+        "passed": true,
+        "elapsedMs": 1422,
+        "detail": null
+      },
+      {
+        "name": "visitor denied /stays",
+        "passed": true,
+        "elapsedMs": 1453,
+        "detail": null
+      },
+      {
+        "name": "visitor denied /workorders",
+        "passed": true,
+        "elapsedMs": 1313,
+        "detail": null
+      },
+      {
+        "name": "visitor denied /audit",
+        "passed": true,
+        "elapsedMs": 1297,
+        "detail": null
+      },
+      {
+        "name": "visitor denied /report-jobs",
+        "passed": true,
+        "elapsedMs": 2125,
+        "detail": null
+      },
+      {
+        "name": "visitor denied vision",
+        "passed": true,
+        "elapsedMs": 1328,
+        "detail": null
+      },
+      {
+        "name": "security denied yearly ledger",
+        "passed": true,
+        "elapsedMs": 1437,
+        "detail": null
+      },
+      {
+        "name": "security denied user provisioning",
+        "passed": true,
+        "elapsedMs": 1844,
+        "detail": null
+      },
+      {
+        "name": "visitor redacted database snapshot",
+        "passed": true,
+        "elapsedMs": 1281,
+        "detail": {
+          "sampledAt": "2026-10-02T23:45+08:00",
+          "free": 235
+        }
+      },
+      {
+        "name": "signed role rejects tampering",
+        "passed": true,
+        "elapsedMs": 1235,
+        "detail": null
+      },
+      {
+        "name": "yearly money equals daily and zone ledger sums",
+        "passed": true,
+        "elapsedMs": 10234,
+        "detail": {
+          "settled_stays": 167841,
+          "paid_cents": 352094400,
+          "fee_cents": 352094400
+        }
+      },
+      {
+        "name": "invalid date range rejected",
+        "passed": true,
+        "elapsedMs": 1359,
+        "detail": null
+      },
+      {
+        "name": "invalid pagination rejected",
+        "passed": true,
+        "elapsedMs": 1282,
+        "detail": null
+      },
+      {
+        "name": "charging matches B capability",
+        "passed": true,
+        "elapsedMs": 1546,
+        "detail": {
+          "zones": [
+            "B"
+          ]
+        }
+      },
+      {
+        "name": "emergency matches C capability",
+        "passed": true,
+        "elapsedMs": 1375,
+        "detail": {
+          "zones": [
+            "C"
+          ]
+        }
+      },
+      {
+        "name": "unknown POI rejected",
+        "passed": true,
+        "elapsedMs": 1344,
+        "detail": null
+      },
+      {
+        "name": "open graph returns bounded path",
+        "passed": true,
+        "elapsedMs": 1422,
+        "detail": {
+          "points": 7,
+          "meters": 608,
+          "version": 2
+        }
+      },
+      {
+        "name": "AG-UI 查看停车报表",
+        "passed": true,
+        "elapsedMs": 2672,
+        "detail": {
+          "firstEventMs": 1672,
+          "runId": "60574a6d-78c9-452e-ab15-3b702d247264",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "report.show",
+              "occupancy"
+            ]
+          ],
+          "references": 0,
+          "events": 13
+        }
+      },
+      {
+        "name": "AG-UI 推荐停车区",
+        "passed": true,
+        "elapsedMs": 2094,
+        "detail": {
+          "firstEventMs": 1812,
+          "runId": "e79f225e-3722-4ee5-90c2-9d2dcf3c3b26",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "report.show",
+              "recommendation"
+            ]
+          ],
+          "references": 0,
+          "events": 13
+        }
+      },
+      {
+        "name": "AG-UI 开始访客导览",
+        "passed": true,
+        "elapsedMs": 1906,
+        "detail": {
+          "firstEventMs": 1625,
+          "runId": "2886a2e4-bd5a-4c79-b252-2633ac2bb490",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "tour.start",
+              "visitor"
+            ]
+          ],
+          "references": 0,
+          "events": 12
+        }
+      },
+      {
+        "name": "AG-UI 开始运营巡检",
+        "passed": true,
+        "elapsedMs": 2516,
+        "detail": {
+          "firstEventMs": 2344,
+          "runId": "5f244696-21a5-4b2e-a05d-68d693658688",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "tour.start",
+              "operations"
+            ]
+          ],
+          "references": 0,
+          "events": 12
+        }
+      },
+      {
+        "name": "AG-UI 开始夜间巡检",
+        "passed": true,
+        "elapsedMs": 2703,
+        "detail": {
+          "firstEventMs": 1984,
+          "runId": "9a14173b-a3c2-4599-b9c4-cfbdeae69ac3",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "tour.start",
+              "night"
+            ]
+          ],
+          "references": 0,
+          "events": 12
+        }
+      },
+      {
+        "name": "AG-UI 查看日经营报表",
+        "passed": true,
+        "elapsedMs": 1609,
+        "detail": {
+          "firstEventMs": 1343,
+          "runId": "4d829259-0ef6-45eb-9313-f29efe33d11a",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "report.show",
+              "daily"
+            ]
+          ],
+          "references": 0,
+          "events": 13
+        }
+      },
+      {
+        "name": "AG-UI 查看周经营报表",
+        "passed": true,
+        "elapsedMs": 1500,
+        "detail": {
+          "firstEventMs": 1297,
+          "runId": "253baed0-1b0e-43d5-8cc6-36782231bd0b",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "report.show",
+              "weekly"
+            ]
+          ],
+          "references": 0,
+          "events": 13
+        }
+      },
+      {
+        "name": "AG-UI 查看月经营报表",
+        "passed": true,
+        "elapsedMs": 1406,
+        "detail": {
+          "firstEventMs": 1328,
+          "runId": "d2ad1a10-1904-4d09-84a3-56891322c32a",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "report.show",
+              "monthly"
+            ]
+          ],
+          "references": 0,
+          "events": 13
+        }
+      },
+      {
+        "name": "AG-UI 查看年经营报表",
+        "passed": true,
+        "elapsedMs": 2922,
+        "detail": {
+          "firstEventMs": 1203,
+          "runId": "99d37a09-ebba-420a-8268-5709e3f55a12",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "report.show",
+              "yearly"
+            ]
+          ],
+          "references": 0,
+          "events": 13
+        }
+      },
+      {
+        "name": "AG-UI 准备告警工单",
+        "passed": true,
+        "elapsedMs": 2125,
+        "detail": {
+          "firstEventMs": 1938,
+          "runId": "a9d1e260-ca67-4513-85a4-04c02e8b5b58",
+          "provider": "deterministic-command",
+          "actions": [
+            [
+              "workorder.prepare",
+              "latest"
+            ]
+          ],
+          "references": 0,
+          "events": 13
+        }
+      },
+      {
+        "name": "visitor knowledge-only answer",
+        "passed": true,
+        "elapsedMs": 1703,
+        "detail": {
+          "firstEventMs": 1703,
+          "runId": "e9f93d5e-2ba4-4e9b-924a-dc935366df95",
+          "provider": "local-visitor-guide",
+          "actions": [],
+          "references": 5,
+          "events": 9
+        }
+      },
+      {
+        "name": "Flash plans scene and annual report",
+        "passed": true,
+        "elapsedMs": 7219,
+        "detail": {
+          "firstEventMs": 1219,
+          "runId": "c354ec64-a6a5-4cee-9b89-0ece3e6ed984",
+          "provider": "openai-compatible",
+          "actions": [
+            [
+              "scene.poi",
+              "emergency"
+            ],
+            [
+              "report.show",
+              "yearly"
+            ]
+          ],
+          "references": 5,
+          "events": 16
+        }
+      },
+      {
+        "name": "Flash grounds multi-criteria recommendation",
+        "passed": true,
+        "elapsedMs": 9281,
+        "detail": {
+          "firstEventMs": 1438,
+          "runId": "b43cb5a6-8860-4456-9137-33cd1ec997ef",
+          "provider": "openai-compatible",
+          "actions": [
+            [
+              "report.show",
+              "recommendation"
+            ],
+            [
+              "route.show",
+              "parking-b"
+            ],
+            [
+              "scene.poi",
+              "inpatient"
+            ],
+            [
+              "scene.poi",
+              "charging"
+            ]
+          ],
+          "references": 5,
+          "events": 23
+        }
+      }
+    ]
+  },
+  "migration": {
+    "apply": true,
+    "changed": true,
+    "beforeVersion": 1,
+    "nodes": 17,
+    "edges": 16,
+    "afterVersion": 2,
+    "backup": "E:\\Documents\\AI\\codex\\backups\\parking-render-phase2-20261004\\campus-graph-before.json",
+    "setup": {
+      "graphVersion": 2,
+      "reports": {
+        "dataThrough": "2026-10-02",
+        "schedule": "02:15 Asia/Shanghai",
+        "periods": [
+          "daily",
+          "weekly",
+          "monthly",
+          "yearly"
+        ]
+      },
+      "knowledge": {
+        "imported": 1,
+        "knowledgeBaseId": 13,
+        "documents": 14
+      }
+    }
+  },
+  "browser": {
+    "desktop": {
+      "viewport": [
+        1440,
+        900
+      ],
+      "render": [
+        2880,
+        1800
+      ],
+      "bPositionVisuallyChecked": true,
+      "cMainAndSideInFrame": true,
+      "normalConsoleErrors": 0
+    },
+    "mobile": {
+      "viewport": [
+        844,
+        390
+      ],
+      "render": [
+        1688,
+        780
+      ],
+      "cMainAndSideInFrame": true,
+      "portraitCssRotationChecked": true,
+      "cSideRouteLastPoint": [
+        10.2,
+        -1.9
+      ],
+      "canvasPreservedDuringBusinessPanel": true,
+      "normalConsoleErrors": 0
+    },
+    "mobileKtxAndLod": {
+      "ready": true,
+      "render": [
+        1688,
+        780
+      ],
+      "externalResources": [],
+      "normalConsoleErrors": 0
+    },
+    "desktopWebGpu": {
+      "readyAndRendered": true,
+      "render": [
+        2880,
+        1800
+      ],
+      "externalResources": [],
+      "normalConsoleErrors": 0,
+      "normalConsoleWarnings": 0,
+      "longTermDeviceBenchmark": false
+    }
+  }
+}

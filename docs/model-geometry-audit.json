@@ -1,0 +1,1002 @@
+{
+  "schemaVersion": 1,
+  "method": "Read-only glTF topology and unique image dimensions; GPU bytes are estimates, not driver measurements.",
+  "assets": [
+    {
+      "name": "campus-desktop-v2",
+      "sha256": "fa5cc437882bc729ceba24691cb0bfc74e9b72a73872ec9008480ddf380dad29",
+      "triangles": 308914,
+      "transparentTriangles": 10013,
+      "degenerateTriangles": 33,
+      "estimatedUniqueBaseLevelRgbaBytes": 227364096,
+      "meshes": [
+        {
+          "name": "campus-mesh-0",
+          "triangles": 21000,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-1",
+          "triangles": 774,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-2",
+          "triangles": 44284,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-3",
+          "triangles": 1364,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-4",
+          "triangles": 7068,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-5",
+          "triangles": 2491,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-6",
+          "triangles": 2689,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-7",
+          "triangles": 23936,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-8",
+          "triangles": 3161,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-9",
+          "triangles": 3772,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-10",
+          "triangles": 40,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-11",
+          "triangles": 970,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-12",
+          "triangles": 1999,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-13",
+          "triangles": 9222,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-14",
+          "triangles": 299,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-15",
+          "triangles": 710,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-17",
+          "triangles": 1112,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-57",
+          "triangles": 52218,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-58",
+          "triangles": 1488,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-67",
+          "triangles": 16433,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-72",
+          "triangles": 129,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-73",
+          "triangles": 5256,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-75",
+          "triangles": 110,
+          "transparentTriangles": 110,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-76",
+          "triangles": 288,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-77",
+          "triangles": 4990,
+          "transparentTriangles": 4990,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-78",
+          "triangles": 12634,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-79",
+          "triangles": 34,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-80",
+          "triangles": 6634,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-81",
+          "triangles": 2797,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-91",
+          "triangles": 10404,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-92",
+          "triangles": 598,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-93",
+          "triangles": 14,
+          "transparentTriangles": 14,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-94",
+          "triangles": 330,
+          "transparentTriangles": 330,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-95",
+          "triangles": 2797,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-96",
+          "triangles": 4656,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-98",
+          "triangles": 3104,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-99",
+          "triangles": 125,
+          "transparentTriangles": 125,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-103",
+          "triangles": 43004,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 33
+        },
+        {
+          "name": "campus-mesh-104",
+          "triangles": 647,
+          "transparentTriangles": 647,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-106",
+          "triangles": 2671,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-107",
+          "triangles": 5723,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-108",
+          "triangles": 70,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-110",
+          "triangles": 224,
+          "transparentTriangles": 224,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-111",
+          "triangles": 76,
+          "transparentTriangles": 76,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-112",
+          "triangles": 2625,
+          "transparentTriangles": 2625,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-113",
+          "triangles": 872,
+          "transparentTriangles": 872,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-114",
+          "triangles": 299,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-121",
+          "triangles": 1097,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-134",
+          "triangles": 1676,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        }
+      ],
+      "textures": [
+        {
+          "name": "campus-texture-0",
+          "width": 4000,
+          "height": 4000,
+          "baseLevelRgbaBytes": 64000000
+        },
+        {
+          "name": "campus-texture-1",
+          "width": 44,
+          "height": 44,
+          "baseLevelRgbaBytes": 7744
+        },
+        {
+          "name": "campus-texture-2",
+          "width": 402,
+          "height": 372,
+          "baseLevelRgbaBytes": 598176
+        },
+        {
+          "name": "campus-texture-3",
+          "width": 402,
+          "height": 372,
+          "baseLevelRgbaBytes": 598176
+        },
+        {
+          "name": "campus-texture-4",
+          "width": 4000,
+          "height": 4000,
+          "baseLevelRgbaBytes": 64000000
+        },
+        {
+          "name": "campus-texture-5",
+          "width": 215,
+          "height": 530,
+          "baseLevelRgbaBytes": 455800
+        },
+        {
+          "name": "campus-texture-6",
+          "width": 215,
+          "height": 530,
+          "baseLevelRgbaBytes": 455800
+        },
+        {
+          "name": "campus-texture-7",
+          "width": 640,
+          "height": 640,
+          "baseLevelRgbaBytes": 1638400
+        },
+        {
+          "name": "campus-texture-8",
+          "width": 440,
+          "height": 1320,
+          "baseLevelRgbaBytes": 2323200
+        },
+        {
+          "name": "campus-texture-9",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "campus-texture-10",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "campus-texture-11",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "campus-texture-12",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "campus-texture-13",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "campus-texture-14",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "campus-texture-15",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "campus-texture-16",
+          "width": 4096,
+          "height": 4096,
+          "baseLevelRgbaBytes": 67108864
+        },
+        {
+          "name": "campus-texture-18",
+          "width": 1252,
+          "height": 1249,
+          "baseLevelRgbaBytes": 6254992
+        }
+      ]
+    },
+    {
+      "name": "campus-mobile-v2",
+      "sha256": "93e8c97dbcb76251cbf3c18dfd2bef62c46646c00d08b7d2e1f821da27e4e039",
+      "triangles": 245234,
+      "transparentTriangles": 8538,
+      "degenerateTriangles": 33,
+      "estimatedUniqueBaseLevelRgbaBytes": 82586880,
+      "meshes": [
+        {
+          "name": "campus-mesh-0",
+          "triangles": 15511,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-1",
+          "triangles": 571,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-2",
+          "triangles": 32709,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-3",
+          "triangles": 1008,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-4",
+          "triangles": 5220,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-5",
+          "triangles": 1946,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-6",
+          "triangles": 1986,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-7",
+          "triangles": 17681,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-8",
+          "triangles": 2335,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-9",
+          "triangles": 2787,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-10",
+          "triangles": 40,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-11",
+          "triangles": 716,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-12",
+          "triangles": 1476,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-13",
+          "triangles": 6811,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-14",
+          "triangles": 221,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-15",
+          "triangles": 525,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-17",
+          "triangles": 821,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-57",
+          "triangles": 38586,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-58",
+          "triangles": 1098,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-67",
+          "triangles": 14211,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-72",
+          "triangles": 102,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-73",
+          "triangles": 3882,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-75",
+          "triangles": 83,
+          "transparentTriangles": 83,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-76",
+          "triangles": 220,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-77",
+          "triangles": 3686,
+          "transparentTriangles": 3686,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-78",
+          "triangles": 9332,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-79",
+          "triangles": 34,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-80",
+          "triangles": 4899,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-81",
+          "triangles": 2067,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-91",
+          "triangles": 9985,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-92",
+          "triangles": 511,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-93",
+          "triangles": 14,
+          "transparentTriangles": 14,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-94",
+          "triangles": 330,
+          "transparentTriangles": 330,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-95",
+          "triangles": 2796,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-96",
+          "triangles": 3828,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-98",
+          "triangles": 2293,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-99",
+          "triangles": 92,
+          "transparentTriangles": 92,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-103",
+          "triangles": 39628,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 33
+        },
+        {
+          "name": "campus-mesh-104",
+          "triangles": 647,
+          "transparentTriangles": 647,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-106",
+          "triangles": 1995,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-107",
+          "triangles": 5723,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-108",
+          "triangles": 70,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-110",
+          "triangles": 224,
+          "transparentTriangles": 224,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-111",
+          "triangles": 76,
+          "transparentTriangles": 76,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-112",
+          "triangles": 2514,
+          "transparentTriangles": 2514,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-113",
+          "triangles": 872,
+          "transparentTriangles": 872,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-114",
+          "triangles": 299,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-121",
+          "triangles": 1097,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "campus-mesh-134",
+          "triangles": 1676,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        }
+      ],
+      "textures": [
+        {
+          "name": "campus-texture-0",
+          "width": 2048,
+          "height": 2048,
+          "baseLevelRgbaBytes": 16777216
+        },
+        {
+          "name": "campus-texture-1",
+          "width": 44,
+          "height": 44,
+          "baseLevelRgbaBytes": 7744
+        },
+        {
+          "name": "campus-texture-2",
+          "width": 402,
+          "height": 372,
+          "baseLevelRgbaBytes": 598176
+        },
+        {
+          "name": "campus-texture-3",
+          "width": 402,
+          "height": 372,
+          "baseLevelRgbaBytes": 598176
+        },
+        {
+          "name": "campus-texture-4",
+          "width": 2048,
+          "height": 2048,
+          "baseLevelRgbaBytes": 16777216
+        },
+        {
+          "name": "campus-texture-5",
+          "width": 215,
+          "height": 530,
+          "baseLevelRgbaBytes": 455800
+        },
+        {
+          "name": "campus-texture-6",
+          "width": 215,
+          "height": 530,
+          "baseLevelRgbaBytes": 455800
+        },
+        {
+          "name": "campus-texture-7",
+          "width": 640,
+          "height": 640,
+          "baseLevelRgbaBytes": 1638400
+        },
+        {
+          "name": "campus-texture-8",
+          "width": 440,
+          "height": 1320,
+          "baseLevelRgbaBytes": 2323200
+        },
+        {
+          "name": "campus-texture-9",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "campus-texture-10",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "campus-texture-11",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "campus-texture-12",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "campus-texture-13",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "campus-texture-14",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "campus-texture-15",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "campus-texture-16",
+          "width": 2048,
+          "height": 2048,
+          "baseLevelRgbaBytes": 16777216
+        },
+        {
+          "name": "campus-texture-18",
+          "width": 1252,
+          "height": 1249,
+          "baseLevelRgbaBytes": 6254992
+        }
+      ]
+    },
+    {
+      "name": "vehicle-desktop-v3",
+      "sha256": "b2999fc50266ed789fdc1a5f8c86e5f764e936a6fa8d1475692dc7c14c8bfe4c",
+      "triangles": 24221,
+      "transparentTriangles": 0,
+      "degenerateTriangles": 0,
+      "estimatedUniqueBaseLevelRgbaBytes": 19922944,
+      "meshes": [
+        {
+          "name": "vehicle-body",
+          "triangles": 19121,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "vehicle-wheel-0",
+          "triangles": 1281,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "vehicle-wheel-1",
+          "triangles": 1281,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "vehicle-wheel-2",
+          "triangles": 1269,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "vehicle-wheel-3",
+          "triangles": 1269,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        }
+      ],
+      "textures": [
+        {
+          "name": "vehicle-texture-0",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "vehicle-texture-1",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "vehicle-texture-2",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "vehicle-texture-3",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "vehicle-texture-4",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "vehicle-texture-5",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "vehicle-texture-6",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        }
+      ]
+    },
+    {
+      "name": "vehicle-mobile-v3",
+      "sha256": "470b1c0e6213cc225c457b341dae52bf727155867523559f254075f28d027a31",
+      "triangles": 21249,
+      "transparentTriangles": 0,
+      "degenerateTriangles": 0,
+      "estimatedUniqueBaseLevelRgbaBytes": 19922944,
+      "meshes": [
+        {
+          "name": "vehicle-body",
+          "triangles": 16149,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "vehicle-wheel-0",
+          "triangles": 1281,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "vehicle-wheel-1",
+          "triangles": 1281,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "vehicle-wheel-2",
+          "triangles": 1269,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        },
+        {
+          "name": "vehicle-wheel-3",
+          "triangles": 1269,
+          "transparentTriangles": 0,
+          "degenerateTriangles": 0
+        }
+      ],
+      "textures": [
+        {
+          "name": "vehicle-texture-0",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "vehicle-texture-1",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "vehicle-texture-2",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        },
+        {
+          "name": "vehicle-texture-3",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "vehicle-texture-4",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "vehicle-texture-5",
+          "width": 512,
+          "height": 512,
+          "baseLevelRgbaBytes": 1048576
+        },
+        {
+          "name": "vehicle-texture-6",
+          "width": 1024,
+          "height": 1024,
+          "baseLevelRgbaBytes": 4194304
+        }
+      ]
+    }
+  ]
+}

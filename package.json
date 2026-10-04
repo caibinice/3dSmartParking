@@ -7,11 +7,15 @@
     "start": "ng serve --host 127.0.0.1 --port 8699",
     "build": "ng build --base-href /smartParking/",
     "build:local": "ng build --base-href /",
-    "test": "tsx --test src/app/core/*.test.ts && node scripts/audit-assets.mjs",
+    "test": "tsx --test src/app/core/*.test.ts && node scripts/audit-assets.mjs && node scripts/audit-render-variants.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "optimize:model": "node scripts/optimize-model.mjs",
     "optimize:gpu": "node scripts/optimize-gpu.mjs",
-    "prepare:traffic": "node scripts/prepare-traffic.mjs"
+    "prepare:traffic": "node scripts/prepare-traffic.mjs",
+    "prepare:render": "node scripts/prepare-render-variants.mjs",
+    "prepare:decoder": "node scripts/prepare-ktx-decoder.mjs",
+    "audit:geometry": "node scripts/audit-model-geometry.mjs",
+    "sync:layout": "node scripts/sync-campus-layout.mjs"
   },
   "dependencies": {
     "@ag-ui/core": "1.0.1",
@@ -31,6 +35,7 @@
     "@angular/build": "21.2.24",
     "@angular/cli": "21.2.24",
     "@angular/compiler-cli": "21.2.25",
+    "@babylonjs/ktx2decoder": "9.29.0",
     "@gltf-transform/core": "^4.3.0",
     "@gltf-transform/extensions": "^4.3.0",
     "@gltf-transform/functions": "^4.3.0",

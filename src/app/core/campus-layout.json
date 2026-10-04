@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "nodes": [
+    {"id":"entrance","label":"园区主入口","kind":"entrance","zone":null,"x":0,"z":-9,"accessible":true,"charging":false,"closed":false},
+    {"id":"exit","label":"园区出口","kind":"entrance","zone":null,"x":-9,"z":-9,"accessible":true,"charging":false,"closed":false},
+    {"id":"road-center","label":"主道路中段","kind":"junction","zone":null,"x":0,"z":-4,"accessible":true,"charging":false,"closed":false},
+    {"id":"road-west","label":"右侧道路","kind":"junction","zone":null,"x":-8,"z":-4,"accessible":true,"charging":false,"closed":false},
+    {"id":"road-east","label":"左侧道路南端","kind":"junction","zone":null,"x":12.9,"z":-4,"accessible":true,"charging":false,"closed":false},
+    {"id":"road-left-mid","label":"左侧停车区道路","kind":"junction","zone":null,"x":12.9,"z":-1.9,"accessible":true,"charging":false,"closed":false},
+    {"id":"road-left-top","label":"左上停车区道路","kind":"junction","zone":null,"x":12.9,"z":5.2,"accessible":true,"charging":false,"closed":false},
+    {"id":"parking-a","label":"门诊停车区","kind":"parking","zone":"A","x":0,"z":2,"accessible":true,"charging":false,"closed":false},
+    {"id":"parking-b","label":"住院停车区","kind":"parking","zone":"B","x":-8,"z":-2,"accessible":true,"charging":true,"closed":false},
+    {"id":"parking-c","label":"急诊停车区 · 左上","kind":"parking","zone":"C","x":10.8,"z":5.2,"accessible":true,"charging":false,"closed":false},
+    {"id":"parking-c-side","label":"急诊停车区 · 左侧","kind":"service","zone":"C","x":10.2,"z":-1.9,"accessible":true,"charging":false,"closed":false},
+    {"id":"outpatient","label":"门诊楼入口","kind":"destination","zone":"A","x":0,"z":4,"accessible":true,"charging":false,"closed":false},
+    {"id":"inpatient","label":"住院楼入口","kind":"destination","zone":"B","x":-8,"z":1,"accessible":true,"charging":false,"closed":false},
+    {"id":"emergency","label":"急诊楼入口","kind":"destination","zone":"C","x":9.8,"z":4.5,"accessible":true,"charging":false,"closed":false},
+    {"id":"charging","label":"充电服务点","kind":"service","zone":"B","x":-7.1,"z":-2.4,"accessible":true,"charging":true,"closed":false},
+    {"id":"accessible","label":"无障碍服务点","kind":"service","zone":"A","x":1,"z":2,"accessible":true,"charging":false,"closed":false},
+    {"id":"security","label":"安保服务点","kind":"service","zone":null,"x":-1,"z":-8,"accessible":true,"charging":false,"closed":false}
+  ],
+  "edges": [
+    {"from":"entrance","to":"road-center","closed":false},
+    {"from":"exit","to":"road-west","closed":false},
+    {"from":"road-west","to":"road-center","closed":false},
+    {"from":"road-center","to":"road-east","closed":false},
+    {"from":"road-east","to":"road-left-mid","closed":false},
+    {"from":"road-left-mid","to":"road-left-top","closed":false},
+    {"from":"road-center","to":"parking-a","closed":false},
+    {"from":"road-west","to":"parking-b","closed":false},
+    {"from":"road-left-top","to":"parking-c","closed":false},
+    {"from":"road-left-mid","to":"parking-c-side","closed":false},
+    {"from":"parking-a","to":"outpatient","closed":false},
+    {"from":"parking-b","to":"inpatient","closed":false},
+    {"from":"parking-c","to":"emergency","closed":false},
+    {"from":"parking-b","to":"charging","closed":false},
+    {"from":"parking-a","to":"accessible","closed":false},
+    {"from":"entrance","to":"security","closed":false}
+  ]
+}

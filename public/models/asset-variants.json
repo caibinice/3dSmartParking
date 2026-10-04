@@ -1,0 +1,252 @@
+{
+  "revision": "render-2",
+  "runtimeDefault": "original-textures-and-near-geometry",
+  "assets": [
+    {
+      "file": "campus-desktop-v2-ktx2.glb",
+      "kind": "ktx2",
+      "base": "campus-desktop-v2.glb",
+      "sha256": "c5baea5569aa66197a1ef88b84cc1835d4ebfd4cdf40ef9280aa6cabcd0a7890",
+      "bytes": 17695572,
+      "convertedTextures": 8,
+      "geometryUnchanged": true,
+      "default": false
+    },
+    {
+      "file": "campus-mobile-v2-ktx2.glb",
+      "kind": "ktx2",
+      "base": "campus-mobile-v2.glb",
+      "sha256": "88adea8a1eef36228db4ea03622b233b8912aaab22ab44f29b7b7cc3d3b6f590",
+      "bytes": 14921300,
+      "convertedTextures": 8,
+      "geometryUnchanged": true,
+      "default": false
+    },
+    {
+      "file": "vehicle-desktop-v3-ktx2.glb",
+      "kind": "ktx2",
+      "base": "vehicle-desktop-v3.glb",
+      "sha256": "7cecebe1b5876bdd2a5e2c060a05e7b88cb11cfeca52a614a29a79351ac50e96",
+      "bytes": 3226012,
+      "convertedTextures": 4,
+      "geometryUnchanged": true,
+      "default": false
+    },
+    {
+      "file": "vehicle-mobile-v3-ktx2.glb",
+      "kind": "ktx2",
+      "base": "vehicle-mobile-v3.glb",
+      "sha256": "324c398fe27d3a743866e8afb6e321356957a84abc800a2c86b22aa794d76b0c",
+      "bytes": 3155984,
+      "convertedTextures": 4,
+      "geometryUnchanged": true,
+      "default": false
+    },
+    {
+      "file": "vehicle-desktop-v3-far.glb",
+      "kind": "far-lod",
+      "base": "vehicle-desktop-v3.glb",
+      "sha256": "335e99cd3976adcbdc20a0a2b806a4b0db1b1bab7795d783a8864bc9da54a031",
+      "bytes": 1410440,
+      "triangles": 22469,
+      "default": false
+    },
+    {
+      "file": "vehicle-mobile-v3-far.glb",
+      "kind": "far-lod",
+      "base": "vehicle-mobile-v3.glb",
+      "sha256": "0be361c8592d3a8872143d2a3e4b846350ad2d727895d4e1a9e691ddabee6f93",
+      "bytes": 1348816,
+      "triangles": 20897,
+      "default": false
+    }
+  ],
+  "textureChecks": [
+    {
+      "name": "campus-texture-0",
+      "sourceHash": "47f5d40d9777637d17d04d7e29e24043e052fc1fd3914aa53a7432eeb2eb4f3d",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 61.82973144286181,
+      "maxAlphaError": 0,
+      "width": 4000,
+      "height": 4000,
+      "bytes": 408572,
+      "originalBytes": 378988,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-4",
+      "sourceHash": "c58ab8a7cdf17bbc40334ccb3879c922a3ee84e8a047e6a0bb96a36d72282b3d",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 59.97320760755415,
+      "maxAlphaError": 0,
+      "width": 4000,
+      "height": 4000,
+      "bytes": 868487,
+      "originalBytes": 802403,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-8",
+      "sourceHash": "6907a9652f841ae5e75cddb0e1ef7de2336045b600f013aae2f47f4ed8a70404",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 52.964148042748306,
+      "maxAlphaError": 0,
+      "width": 440,
+      "height": 1320,
+      "bytes": 14916,
+      "originalBytes": 59898,
+      "slots": [
+        "baseColorTexture",
+        "normalTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-10",
+      "sourceHash": "100288a02476327a10e3389814cfd4dbfd4ff1c3ac53dd9cc507dfb7e5ed7e69",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 51.113872173337526,
+      "maxAlphaError": 0,
+      "width": 1024,
+      "height": 1024,
+      "bytes": 831038,
+      "originalBytes": 140347,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-11",
+      "sourceHash": "ee3ccf27b135dc918466069fffa842117c9d853c9c22271b5a6272e562917728",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 52.18977849135509,
+      "maxAlphaError": 0,
+      "width": 1024,
+      "height": 1024,
+      "bytes": 634695,
+      "originalBytes": 112919,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-13",
+      "sourceHash": "eb70c311ec897a35982093a6fafe918cd89bd115a45787dc1985a882691b8a70",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 55.04565235969538,
+      "maxAlphaError": 0,
+      "width": 512,
+      "height": 512,
+      "bytes": 183457,
+      "originalBytes": 24644,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-15",
+      "sourceHash": "2b8542a69b94e5389e170d52fcc1c8aa1db9211827f25af3726756d977be5f25",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 55.6555707532855,
+      "maxAlphaError": 0,
+      "width": 1024,
+      "height": 1024,
+      "bytes": 506472,
+      "originalBytes": 72911,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-16",
+      "sourceHash": "3d4d0f3664323f96dd5a7fafd5fa9903c89be86b1d9ec2edcc9e67856a9435e5",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 62.864235630310034,
+      "maxAlphaError": 0,
+      "width": 4096,
+      "height": 4096,
+      "bytes": 638952,
+      "originalBytes": 425832,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-0",
+      "sourceHash": "6b10bdfd3b15aa404a3c30f1e5dbdebaf3520517e7f4d38e8916a66b6fe3322c",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 58.81173581437796,
+      "maxAlphaError": 0,
+      "width": 2048,
+      "height": 2048,
+      "bytes": 186246,
+      "originalBytes": 189603,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-4",
+      "sourceHash": "3344db0b486011336b1ad504ddc36f0bebdeb2d183202bd89137e8a6ed6a329c",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 56.12582253876723,
+      "maxAlphaError": 0,
+      "width": 2048,
+      "height": 2048,
+      "bytes": 344715,
+      "originalBytes": 370648,
+      "slots": [
+        "baseColorTexture"
+      ]
+    },
+    {
+      "name": "campus-texture-16",
+      "sourceHash": "8ab849ca318ac27173f3b31ee8a576438b8e6b77411c4396d289ba79cd4cd172",
+      "colorSpace": "srgb",
+      "accepted": true,
+      "psnr": 56.13411971464438,
+      "maxAlphaError": 0,
+      "width": 2048,
+      "height": 2048,
+      "bytes": 396885,
+      "originalBytes": 324175,
+      "slots": [
+        "baseColorTexture"
+      ]
+    }
+  ],
+  "lodChecks": [
+    {
+      "file": "vehicle-desktop-v3-far.glb",
+      "facesBefore": 24221,
+      "facesAfter": 22469,
+      "maxWorldError": 0.00003180553724326241,
+      "physicalPixelThreshold": 32,
+      "glassTopologyPreserved": true,
+      "nearGeometryPreserved": true
+    },
+    {
+      "file": "vehicle-mobile-v3-far.glb",
+      "facesBefore": 21249,
+      "facesAfter": 20897,
+      "maxWorldError": 0.000031868866508372176,
+      "physicalPixelThreshold": 32,
+      "glassTopologyPreserved": true,
+      "nearGeometryPreserved": true
+    }
+  ]
+}
