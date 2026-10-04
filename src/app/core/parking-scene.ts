@@ -9,8 +9,8 @@ import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import { CreateLineSystem, CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
-import type { LinesMesh } from '@babylonjs/core/Meshes/linesMesh';
+import { CreateLineSystem } from '@babylonjs/core/Meshes/Builders/linesBuilder';
+import { FlowingCampusRoute, navigationCameraFrame } from './parking-navigation';
 import type { PickingInfo } from '@babylonjs/core/Collisions/pickingInfo';
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
@@ -40,7 +40,7 @@ export class ParkingScene {
   private camera?: ArcRotateCamera;
   private observer?: ResizeObserver;
   private glow?: GlowLayer;
-  private navigationLine?: LinesMesh;
+  private navigationRoute?: FlowingCampusRoute;
   private batches?: ParkingVehicleBatches;
   private profiler?: ParkingRenderProfiler;
   private vehicle?: TransformNode;
@@ -66,7 +66,6 @@ export class ParkingScene {
   private selectedTrafficIndex = 0;
   private ktxLoaded = 0;
   private variantFallback = false;
-  private routeLines: LinesMesh[] = [];
   private flight?: Flight;
   private zones: Zone[] = structuredClone(INITIAL_ZONES);
   private removeTouch?: () => void;
@@ -165,9 +164,7 @@ export class ParkingScene {
         pivot.rotationQuaternion = Quaternion.Identity();
         return pivot;
       });
-      const line = CreateLines(`driving-route-${i}`, { points: route.keyframes.map(f => new Vector3(f[1], .025, f[2])) }, scene);
-      line.color = new Color3(.09, .45, .65); line.alpha = .7; line.isPickable = false; line.renderingGroupId = 1; line.setEnabled(false);
-      this.routeLines.push(line);
+      // Authored keyframes remain the motion input; vehicle trajectories have no visual meshes.
       return { node, wheels, route, offset: definition.offset, speed: definition.speed, yaw: 0, wheelAngle: 0 };
     });
     this.vehicle = this.fleet[0].node;
@@ -408,6 +405,7 @@ export class ParkingScene {
     if(now-this.lastFrame<interval-1)return;
     const delta=this.lastFrame?Math.min((now-this.lastFrame)/1000,.1):0;this.lastFrame=now;
     this.updateVehicle(delta);
+    this.navigationRoute?.update(now/1000);
     if(this.flight){const f=this.flight,t=Math.min(1,(now-f.start)/1050),e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
       if(this.follow){const pose=this.tailPose();f.to.copyFromFloats(pose.target[0],pose.target[1],pose.target[2]);f.alphaTo=nearestAngle(f.alphaFrom,pose.alpha);f.radiusTo=pose.radius;f.betaTo=pose.beta;}
       Vector3.LerpToRef(f.from,f.to,e,this.flightTarget);this.camera.setTarget(this.flightTarget,false,true,true);this.camera.radius=f.radiusFrom+(f.radiusTo-f.radiusFrom)*e;this.camera.beta=f.betaFrom+(f.betaTo-f.betaFrom)*e;this.camera.alpha=f.alphaFrom+(f.alphaTo-f.alphaFrom)*e;if(t===1)this.flight=undefined;
@@ -432,11 +430,15 @@ export class ParkingScene {
   updateZones(zones:Zone[]){this.zones=zones;}
   focusPoint(x:number,z:number){if(Number.isFinite(x)&&Number.isFinite(z)&&Math.abs(x)<=40&&Math.abs(z)<=40)this.fly(new Vector3(x,.35,z),5.2,.9);}
   showNavigation(points:[number,number][]){
-    this.clearNavigation();if(!this.scene||!points.length||points.length>40||!points.every(p=>p.length===2&&p.every(n=>Number.isFinite(n)&&Math.abs(n)<=40)))return;
-    this.navigationLine=CreateLines('assistant-navigation',{points:points.map(p=>new Vector3(p[0],.055,p[1]))},this.scene);
-    this.navigationLine.color=Color3.FromHexString('#79ddcf');this.navigationLine.isPickable=false;
+    this.clearNavigation();if(!this.scene||points.length<2)return;
+    try{this.navigationRoute=new FlowingCampusRoute(this.scene,points,this.mobile);}catch{/* Invalid/zero-length paths do not paint a misleading line. */}
   }
-  clearNavigation(){this.navigationLine?.dispose();this.navigationLine=undefined;}
+  focusNavigation(points:[number,number][]){
+    if(points.length<2||!points.every(p=>p.every(n=>Number.isFinite(n)&&Math.abs(n)<=40)))return;
+    const view=navigationCameraFrame(points,this.canvas.clientWidth,this.canvas.clientHeight,this.mobile,this.camera?.fov);
+    this.fly(new Vector3(view.x,.1,view.z),view.radius,.28,-Math.PI/2);
+  }
+  clearNavigation(){this.navigationRoute?.dispose();this.navigationRoute=undefined;}
   captureJpeg(){
     if(!this.scene||!this.engine)throw new Error('请等待场景加载完成');this.engine.beginFrame();this.scene.render();this.engine.endFrame();
     const out=document.createElement('canvas'),scale=Math.min(1,1024/Math.max(this.canvas.width,this.canvas.height));
@@ -458,9 +460,8 @@ export class ParkingScene {
     this.selectedTrafficIndex=Math.max(0,Math.min(this.fleet.length-1,index));this.vehicle=this.fleet[this.selectedTrafficIndex].node;
     const pose=this.tailPose();this.fly(Vector3.FromArray(pose.target),pose.radius,pose.beta,nearestAngle(this.camera?.alpha??0,pose.alpha));this.setFollowing(true);
   }
-  showRoute(value:boolean){this.routeLines.forEach((line,i)=>line.setEnabled(value&&i===this.selectedTrafficIndex));}
   followVehicle(value:boolean){this.setFollowing(value);this.orbit=false;this.flight=undefined;if(value)this.applyTailCamera();}
   reset(){this.fly(new Vector3(0,.8,1.3),this.overviewRadius(),.79,-Math.PI/2);}
   top(){this.fly(new Vector3(0,0,1.3),this.overviewRadius()+1,.15,-Math.PI/2);}
-  dispose(){this.destroyed=true;this.profiler?.dispose();this.observer?.disconnect();this.removeTouch?.();document.removeEventListener('visibilitychange',this.onVisibility);this.engine?.stopRenderLoop();this.batches?.dispose();this.scene?.dispose();this.engine?.dispose();}
+  dispose(){this.destroyed=true;this.clearNavigation();this.profiler?.dispose();this.observer?.disconnect();this.removeTouch?.();document.removeEventListener('visibilitychange',this.onVisibility);this.engine?.stopRenderLoop();this.batches?.dispose();this.scene?.dispose();this.engine?.dispose();}
 }

@@ -4,8 +4,8 @@
   <h3>去哪里停车？</h3><p class="muted">结合数据库空位、目的地、步行距离与模拟预留规则推荐。路径仅用于本三维演示。</p>
   <label>目的地<select aria-label="停车目的地" [(ngModel)]="client().destination">@for(p of catalog().graph.nodes;track p.id){@if(p.kind==='destination'||p.kind==='service'){<option [value]="p.id" [disabled]="p.closed">{{p.label}}{{p.closed?'（关闭）':''}}</option>}}</select></label>
   <label>泊位偏好<select aria-label="泊位偏好" [(ngModel)]="client().preference"><option value="standard">普通停车</option><option value="accessible">无障碍条件</option><option value="charging">充电条件</option><option value="emergency">急诊优先</option></select></label>
-  <div class="button-row"><button (click)="send.emit('推荐停车区')">查看联合推荐</button><button (click)="showRoute()" [disabled]="busy()">显示入口路径</button></div>
-  <h3>三维导览线路</h3><div class="tour-cards"><button (click)="send.emit('开始访客导览')"><b>访客到院</b><span>入口 · 门诊 · 住院 · 出口</span></button>@if(staff()){<button (click)="send.emit('开始运营巡检')"><b>运营巡检</b><span>车区 · 充电服务 · 急诊</span></button><button (click)="send.emit('开始夜间巡检')"><b>夜间巡检</b><span>安保 · 入口 · 住院 · 急诊 · 出口</span></button>}</div>
+  <div class="button-row"><button (click)="send.emit('推荐停车区')">查看联合推荐</button><button (click)="showRoute()" [disabled]="busy()">点亮入口路线</button></div>
+  <h3>医院服务查询</h3><div class="button-row"><button (click)="send.emit('今天医院天气怎么样')">常州今日天气</button><button (click)="send.emit('医院怎么预约挂号')">挂号指南</button><button (click)="send.emit('医院有哪些科室')">科室目录</button><button (click)="send.emit('住院病房有哪些')">病房指南</button></div><h3>三维导览线路</h3><div class="tour-cards"><button (click)="send.emit('开始访客导览')"><b>访客到院</b><span>入口 · 门诊 · 住院 · 出口</span></button>@if(staff()){<button (click)="send.emit('开始运营巡检')"><b>运营巡检</b><span>车区 · 充电服务 · 急诊</span></button><button (click)="send.emit('开始夜间巡检')"><b>夜间巡检</b><span>安保 · 入口 · 住院 · 急诊 · 出口</span></button>}</div>
   <h3>园区点位</h3><div class="poi-grid">@for(p of catalog().graph.nodes;track p.id){@if(p.kind!=='junction'){<button [disabled]="p.closed" (click)="focus.emit(p.id)">{{p.label}}</button>}}</div>
  }
  @if(mode==='analytics'&&operator()){

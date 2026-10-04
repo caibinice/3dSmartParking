@@ -86,7 +86,7 @@
     <div class="modal-backdrop" (click)="help.set(false)"><section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title" (click)="$event.stopPropagation()"><button class="close-button" (click)="help.set(false)" aria-label="关闭说明">×</button><span class="eyebrow">IMMERSIVE EXPLORATION</span><h2 id="help-title">让三维场景成为主界面</h2><ul><li>默认仅显示园区与操作底栏，统计、图表和记录点击后展开。</li><li>点击 A / B / C 定位点平滑飞入区域；点击车辆查看特写，支持跟随巡行。</li><li>桌面拖动旋转、滚轮缩放、右键平移；手机单指旋转、双指缩放。</li><li>纯净场景隐藏所有信息层，再点“显示界面”恢复；Esc 可关闭浮层。</li><li>手机保留同一精细园区、纹理和车辆，使用保守减面，竖屏自动转换横向布局。</li><li>助手复用企业智能座舱服务；停车数据、车辆行为和提醒均为模拟，未连接真实设备。</li></ul><button class="primary" (click)="help.set(false)">开始探索</button></section></div>
   }
   @if(ready() && introDone()){
-    <app-parking-assistant [context]="agentContext" [execute]="executeAgentAction" [mobile]="mobile" [tour]="tour()" [capture]="captureAgentScene" (catalogLoaded)="receiveAgentCatalog($event)" (databaseSnapshot)="receiveAgentSnapshot($event)" (routeReady)="receiveAgentRoute($event)" (signedOut)="store.events.set([]);store.alarms.set([])" (opened)="panel.set(null);clean.set(false)"></app-parking-assistant>
+    <app-parking-assistant [context]="agentContext" [execute]="executeAgentAction" [mobile]="mobile" [tour]="tour()" [capture]="captureAgentScene" (catalogLoaded)="receiveAgentCatalog($event)" (databaseSnapshot)="receiveAgentSnapshot($event)" (routeReady)="receiveAgentRoute($event)" (signedOut)="assistantSignedOut()" (opened)="panel.set(null);clean.set(false)"></app-parking-assistant>
   }
-  @if(navigation();as path){<div class="route-chip"><span>道路指引 · {{path.label}} · 约 {{path.meters}} 米（模型估计）</span><button (click)="clearAgentRoute()" aria-label="清除道路路径">×</button></div>}
+  @if(navigation();as path){<div class="route-chip"><span>流光导航 · {{path.steps[0]}} → {{path.label}} · 约 {{path.meters}} 米（模型估计）</span><button (click)="endNavigation()" aria-label="结束导航并清除道路路径">结束导航</button></div>}
 </div>

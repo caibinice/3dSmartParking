@@ -4,6 +4,7 @@ import { ParkingAgentClient } from './parking-agent-client';
 import { ParkingVoice, type VoiceState } from './parking-voice';
 import { configureAgentTargets, parseAgentAction, parseAgentReport, type AgentAction, type AgentSnapshot, type AgentReport, type ReportZone, type SseFrame } from '../core/parking-agent';
 import { validRoute, type ParkingCatalog, type ParkingDatabaseSnapshot, type ParkingRoute } from '../core/parking-operations';
+import { parkingConnectionMessage } from '../core/parking-stream';
 import type { Alarm, ParkingEvent } from '../core/parking-data';
 import { ParkingBusinessComponent } from './parking-business.component';
 import { ParkingBusinessReportComponent } from './parking-business-report.component';
@@ -59,7 +60,7 @@ export class ParkingAssistantComponent implements OnDestroy {
     catch (error) { this.notice.set(error instanceof Error ? error.message : '操作验证失败'); }
     finally { this.password = ''; this.authenticating.set(false); }
   }
-  async visitor(){if(this.authenticating())return;this.authenticating.set(true);this.notice.set('');try{await this.client.login('visitor','');this.authorized.set(true);await this.connect();}catch(error){this.notice.set(String(error));}finally{this.authenticating.set(false);}}
+  async visitor(){if(this.authenticating())return;this.authenticating.set(true);this.notice.set('');try{await this.client.login('visitor','');this.authorized.set(true);await this.connect();}catch(error){this.notice.set(error instanceof Error?error.message:'访客登录未完成，请稍后重试');}finally{this.authenticating.set(false);}}
   async connect(){
     try{const catalog=await this.client.catalog();this.catalog.set(catalog);configureAgentTargets(catalog.tools);this.catalogLoaded.emit(catalog);this.databaseSnapshot.emit(await this.client.snapshot());}
     catch(error){this.notice.set(error instanceof Error?error.message:'停车业务连接未完成');this.authorized.set(this.client.authorized());}
@@ -83,15 +84,17 @@ export class ParkingAssistantComponent implements OnDestroy {
     this.current = this.items().length - 1; this.draft = ''; this.notice.set(''); this.phase.set('正在连接企业智能座舱…');
     this.busy.set(true); this.actionIds.clear(); this.expectedActions.clear(); this.voice.cancelSpeech(); this.voice.pauseForRequest();
     const controller = this.abort = new AbortController();
-    this.expiryTimer = setTimeout(() => controller.abort(), 110000);
+    let timedOut=false;
+    this.expiryTimer = setTimeout(() => {timedOut=true;controller.abort();}, 110000);
     try {
       await this.client.stream(question, this.model, this.context()(), history, controller.signal, frame => this.onFrame(frame));
       const item = this.items()[this.current];
       if (!controller.signal.aborted && !item.text.trim()) this.updateCurrent({ text: '服务已结束响应，没有生成有效回答，请重试。' });
       if (!controller.signal.aborted && this.autoSpeak && item.text.trim() && !this.tour().active) this.voice.speak(item.text);
     } catch (error) {
-      this.updateCurrent({ text: controller.signal.aborted ? '本次请求已停止，后续场景操作已取消。'
-        : error instanceof Error ? error.message : '助手连接中断，请重试。' });
+      const message=parkingConnectionMessage(error,timedOut,controller.signal.aborted);
+      // Never erase a partial answer or already delivered tool results on transport loss.
+      if(this.items()[this.current]?.text.trim())this.notice.set(message);else this.updateCurrent({text:message});
       this.authorized.set(this.client.authorized());
       if(!this.authorized()){this.catalog.set(null);this.signedOut.emit();}
     } finally {
@@ -127,6 +130,10 @@ export class ParkingAssistantComponent implements OnDestroy {
     }
     if (frame.event === 'report') { const report = parseAgentReport(value); if (report) this.items.update(items=>items.map((item,i)=>i===this.current?{...item,reports:[...(item.reports??[]),report]}:item)); else this.notice.set('报表格式校验未通过。'); }
     if(frame.event==='route'&&validRoute(value))this.routeReady.emit(value);
+    if(frame.event==='preferences'){
+      if(typeof value.destination==='string'&&this.catalog()?.graph.nodes.some(p=>p.id===value.destination&&!p.closed))this.client.destination=value.destination;
+      if(['standard','accessible','charging','emergency'].includes(value.preference))this.client.preference=value.preference;
+    }
     if(frame.event==='draft'){this.draftWorkorder.set(value);this.notice.set('告警工单草稿已准备。打开业务台的工单页，人工确认后提交。');}
     if(frame.event==='state')void this.client.snapshot().then(snapshot=>this.databaseSnapshot.emit(snapshot)).catch(()=>{});
     if (frame.event === 'references' && Array.isArray(value)) this.updateCurrent({ references: value.slice(0, 5).map(r => String(r.title).slice(0, 200)) });
@@ -159,7 +166,7 @@ export class ParkingAssistantComponent implements OnDestroy {
   alarms(report: AgentReport) { return report.data as Alarm[]; }
   time(value: string) { return new Date(value).toLocaleTimeString('zh-CN', { hour12: false }); }
   dataTime(value:string){return new Date(value).toLocaleString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'});}
-  provider(value?: string) { return !value ? '正在规划' : value === 'deterministic-command' ? '场景快捷指令' : value.startsWith('local-') ? '本地知识指南' : 'DeepSeek · Thinking max'; }
+  provider(value?: string) { return !value ? '正在规划' : value === 'weather-mcp' ? '常州天气 · MCP' : value === 'deterministic-command' ? '场景快捷指令' : value === 'deterministic-business' ? '数据库业务查询' : value === 'hospital-guide' ? '脱敏医院知识' : value.startsWith('local-') ? '本地知识指南' : 'DeepSeek · Thinking max'; }
   reportName(kind:string){return ({occupancy:'泊位概览',recommendation:'停车推荐',events:'最近出入记录',alerts:'运行告警',daily:'日经营报表',weekly:'周经营报表',monthly:'月经营报表',yearly:'年经营报表',workorders:'告警工单',audit:'操作审计'} as Record<string,string>)[kind]??'业务报表';}
   @HostListener('document:visibilitychange') onVisibility() { if (document.hidden) { this.voice.stop(); this.voice.cancelSpeech(); this.cancel(); if (this.tour().active && !this.tour().paused) this.tourControl('tour.pause'); } }
   @HostListener('document:keydown.escape') onEscape() { this.hide(); this.voice.stop(); this.voice.cancelSpeech(); }

@@ -60,6 +60,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private toastTimer?:ReturnType<typeof setTimeout>;
   private introTimer?:ReturnType<typeof setTimeout>;
   private tourTimer?:ReturnType<typeof setTimeout>;
+  private navigationAbort?:AbortController;
+  private routeGeneration=0;
   private lastAgentResult='';
   private disposed=false;
   async ngAfterViewInit(){
@@ -96,15 +98,15 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     for(const pin of pins){const element=this.pins.nativeElement.querySelector<HTMLElement>(`[data-pin="${pin.id}"]`);if(!element)continue;element.style.transform=`translate(${pin.x.toFixed(1)}px,${pin.y.toFixed(1)}px) translate(-50%,-100%)`;element.style.visibility=pin.visible?'visible':'hidden';}
   }
   togglePanel(panel:Panel){this.assistant?.hide();this.panel.update(current=>current===panel?null:panel);this.clean.set(false);}
-  selectZone(id:ZoneId,fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(id);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.focusZone(id);this.scene?.showRoute(false);this.panel.set(null);}
-  selectVehicle(vehicle?:VehiclePick,trafficIndex=0,fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(true);this.parkedVehicle.set(vehicle?.parked??false);this.vehicleIndex.set((vehicle?.index??trafficIndex)+1);this.following.set(!vehicle?.parked);this.orbit.set(false);this.panel.set(null);this.scene?.focusVehicle(vehicle?.parked?vehicle.position:undefined,vehicle?.index??trafficIndex);this.scene?.showRoute(!vehicle?.parked);}
+  selectZone(id:ZoneId,fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(id);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.focusZone(id);this.panel.set(null);}
+  selectVehicle(vehicle?:VehiclePick,trafficIndex=0,fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(true);this.parkedVehicle.set(vehicle?.parked??false);this.vehicleIndex.set((vehicle?.index??trafficIndex)+1);this.following.set(!vehicle?.parked);this.orbit.set(false);this.panel.set(null);this.scene?.focusVehicle(vehicle?.parked?vehicle.position:undefined,vehicle?.index??trafficIndex);}
   nextVehicle(){this.selectVehicle(undefined,this.vehicleIndex()%3);}
   toggleFollow(){this.following.update(v=>!v);this.scene?.followVehicle(this.following());}
-  reset(fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.reset();this.scene?.showRoute(false);this.panel.set(null);}
-  top(fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.top();this.scene?.showRoute(false);this.panel.set(null);}
+  reset(fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.reset();this.panel.set(null);}
+  top(fromAgent=false){if(!fromAgent)this.manualSceneInput();this.selected.set(null);this.vehicleSelected.set(false);this.following.set(false);this.orbit.set(false);this.scene?.top();this.panel.set(null);}
   toggleOrbit(){this.manualSceneInput();this.orbit.update(v=>!v);this.following.set(false);this.scene?.setOrbit(this.orbit());this.panel.set(null);}
   togglePause(){this.paused.update(v=>!v);this.scene?.setPaused(this.paused());}
-  toggleClean(){this.clean.update(v=>!v);this.assistant?.hide();if(this.clean()){this.stopTour();this.assistant?.voice.stop();}this.panel.set(null);this.help.set(false);this.selected.set(null);this.vehicleSelected.set(false);this.scene?.showRoute(false);}
+  toggleClean(){this.clean.update(v=>!v);this.assistant?.hide();if(this.clean()){this.stopTour();this.assistant?.voice.stop();}this.panel.set(null);this.help.set(false);this.selected.set(null);this.vehicleSelected.set(false);}
   changeQuality(){this.scene?.applyQuality(this.quality);}
   changeProfiling(value:boolean){this.profiling.set(value);this.scene?.setProfiling(value);}
   reloadRenderMode(key:string,value:string){const url=new URL(location.href);if(value)url.searchParams.set(key,value);else url.searchParams.delete(key);location.assign(url.href);}
@@ -127,8 +129,18 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   readonly captureAgentScene=()=>this.scene?.captureJpeg()??'';
   receiveAgentCatalog(value:ParkingCatalog){this.poiCatalog=value;}
   receiveAgentSnapshot(value:ParkingDatabaseSnapshot){this.store.applyDatabaseSnapshot(value);this.scene?.updateZones(this.store.zones());}
-  receiveAgentRoute(value:ParkingRoute){if(!validRoute(value))return;this.navigation.set(value);this.scene?.showNavigation(value.points);}
-  clearAgentRoute(){this.navigation.set(null);this.scene?.clearNavigation();}
+  receiveAgentRoute(value:ParkingRoute){if(!validRoute(value))return;this.clearAgentRoute();if(value.points.length<2)return;this.navigation.set(value);this.scene?.showNavigation(value.points);this.scene?.focusNavigation(value.points);}
+  clearAgentRoute(){this.routeGeneration++;this.navigationAbort?.abort();this.navigationAbort=undefined;this.navigation.set(null);this.scene?.clearNavigation();}
+  endNavigation(){this.stopTour();this.assistant?.cancel();this.clearAgentRoute();this.message('导航已结束，路线标识已移除');}
+  async requestAgentRoute(to:string,from='entrance'){
+    this.clearAgentRoute();if(!this.assistant?.client.authorized()||from===to)return;
+    const controller=this.navigationAbort=new AbortController(),generation=this.routeGeneration;
+    try{
+      const path=await this.assistant.client.route(to,from,AbortSignal.any([controller.signal,AbortSignal.timeout(15000)]));
+      if(!this.disposed&&!controller.signal.aborted&&generation===this.routeGeneration&&validRoute(path))this.receiveAgentRoute(path);
+    }catch(error){if(!controller.signal.aborted&&generation===this.routeGeneration)this.message(error instanceof Error?error.message:'本次道路指引未完成');}
+  }
+  assistantSignedOut(){this.stopTour();this.store.events.set([]);this.store.alarms.set([]);}
   readonly executeAgentAction=(input:AgentAction):string=>{
     const action=parseAgentAction(input);
     if(!action)return '未执行：指令未通过场景白名单校验';
@@ -172,12 +184,14 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     if(!step){this.stopTour();this.message('园区导览已完成');return;}
     this.tour.set({active:true,paused:false,index,title:step.title,narration:step.narration,total:this.tourSteps.length});
     this.focusAgentTarget(step.target);this.assistant?.narrate(step.narration);
+    const from=index>0?this.tourSteps[index-1].target:'entrance';
+    void this.requestAgentRoute(step.target,from);
     this.tourTimer=setTimeout(()=>this.runTourStep(index+1),14000);
   }
   private pauseTour(){if(this.tour().active&&!this.tour().paused){clearTimeout(this.tourTimer);this.tour.update(t=>({...t,paused:true}));this.assistant?.stopSpeaking();}}
-  private stopTour(){clearTimeout(this.tourTimer);this.tour.set({active:false,paused:false,index:0,title:'',narration:''});this.assistant?.stopSpeaking();}
+  private stopTour(){clearTimeout(this.tourTimer);this.clearAgentRoute();this.tour.set({active:false,paused:false,index:0,title:'',narration:''});this.assistant?.stopSpeaking();}
   manualSceneInput(){this.pauseTour();}
-  closeVehicle(){this.vehicleSelected.set(false);this.following.set(false);this.scene?.followVehicle(false);this.scene?.showRoute(false);}
+  closeVehicle(){this.vehicleSelected.set(false);this.following.set(false);this.scene?.followVehicle(false);}
   @HostListener('document:keydown.escape')close(){this.help.set(false);this.panel.set(null);this.selected.set(null);this.closeVehicle();if(this.clean())this.clean.set(false);}
-  ngOnDestroy(){this.disposed=true;clearInterval(this.timer);clearTimeout(this.toastTimer);clearTimeout(this.introTimer);clearTimeout(this.tourTimer);this.openingVideo?.nativeElement.pause();this.scene?.dispose();}
+  ngOnDestroy(){this.disposed=true;this.clearAgentRoute();clearInterval(this.timer);clearTimeout(this.toastTimer);clearTimeout(this.introTimer);clearTimeout(this.tourTimer);this.openingVideo?.nativeElement.pause();this.scene?.dispose();}
 }
