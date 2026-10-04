@@ -1,0 +1,67 @@
+{
+  "revision": "gpu-cache-1",
+  "method": "lossless-vertex-cache-and-fetch",
+  "cacheModel": "32-entry LRU; proxy metric, not an FPS promise",
+  "assets": [
+    {
+      "name": "campus-desktop-v2",
+      "originalBytes": 18953916,
+      "bytes": 15626580,
+      "triangles": 308914,
+      "primitives": 56,
+      "transparentOrderPreserved": 20,
+      "cacheMissesBefore": 412374,
+      "cacheMissesAfter": 360970,
+      "cacheMissReductionPercent": 12.47,
+      "sourceSha256": "6f3b96a1bae5215d66491e708ea5c04c69a08862db44e3dde4dc387758e5ef46",
+      "sha256": "fa5cc437882bc729ceba24691cb0bfc74e9b72a73872ec9008480ddf380dad29",
+      "geometryAndWindingVerified": true,
+      "textureBytesVerified": true
+    },
+    {
+      "name": "campus-mobile-v2",
+      "originalBytes": 16444988,
+      "bytes": 13117660,
+      "triangles": 245234,
+      "primitives": 56,
+      "transparentOrderPreserved": 20,
+      "cacheMissesBefore": 344542,
+      "cacheMissesAfter": 307651,
+      "cacheMissReductionPercent": 10.71,
+      "sourceSha256": "970a2aeb76346e9ba6f4e63192af382340594199b1e7dbbc2074fc0288a2477f",
+      "sha256": "93e8c97dbcb76251cbf3c18dfd2bef62c46646c00d08b7d2e1f821da27e4e039",
+      "geometryAndWindingVerified": true,
+      "textureBytesVerified": true
+    },
+    {
+      "name": "vehicle-desktop-v3",
+      "originalBytes": 1420956,
+      "bytes": 1420956,
+      "triangles": 24221,
+      "primitives": 14,
+      "transparentOrderPreserved": 1,
+      "cacheMissesBefore": 25295,
+      "cacheMissesAfter": 22430,
+      "cacheMissReductionPercent": 11.33,
+      "sourceSha256": "5e64644fe66877bdac72f038e5d339dfe6fd375c2a61b72e43910d321e18b8ea",
+      "sha256": "b2999fc50266ed789fdc1a5f8c86e5f764e936a6fa8d1475692dc7c14c8bfe4c",
+      "geometryAndWindingVerified": true,
+      "textureBytesVerified": true
+    },
+    {
+      "name": "vehicle-mobile-v3",
+      "originalBytes": 1350928,
+      "bytes": 1350928,
+      "triangles": 21249,
+      "primitives": 14,
+      "transparentOrderPreserved": 1,
+      "cacheMissesBefore": 23240,
+      "cacheMissesAfter": 20513,
+      "cacheMissReductionPercent": 11.73,
+      "sourceSha256": "487a7edf75d222f7f4fdaaf937f2735e0708f5e992291afc9bedc161d05d434a",
+      "sha256": "470b1c0e6213cc225c457b341dae52bf727155867523559f254075f28d027a31",
+      "geometryAndWindingVerified": true,
+      "textureBytesVerified": true
+    }
+  ]
+}

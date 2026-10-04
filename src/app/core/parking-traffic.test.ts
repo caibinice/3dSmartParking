@@ -36,3 +36,46 @@ test('three authored routes loop safely and retain the heading while stopped', (
   const stationary = sampleRoute({ id: 'stop', duration: 5, keyframes: [[0, 1, 2], [5, 1, 2]] }, 2, .75);
   close(stationary.yaw, .75); close(nearestAngle(Math.PI - .01, -Math.PI + .01), Math.PI + .01);
 });
+
+test('authored turns have continuous heading and stay within the sampled road envelope', () => {
+  const data = JSON.parse(readFileSync('public/models/traffic-routes-v3.json', 'utf8')) as TrafficRoutes;
+  for (const route of data.routes) {
+    let previous = sampleRoute(route, 0);
+    for (let t = 1 / 60; t < route.duration; t += 1 / 60) {
+      const pose = sampleRoute(route, t, previous.yaw);
+      assert.ok(Math.abs(nearestAngle(previous.yaw, pose.yaw) - previous.yaw) < .09, `${route.id}: snapped heading at ${t}`);
+      previous = pose;
+    }
+    for (let i = 1; i < route.keyframes.length - 1; i++) {
+      const frame = route.keyframes[i], before = sampleRoute(route, frame[0] - 1e-6), after = sampleRoute(route, frame[0] + 1e-6);
+      assert.ok(Math.abs(nearestAngle(before.yaw, after.yaw) - before.yaw) < .0001, `${route.id}: discontinuous tangent at ${i}`);
+      close(sampleRoute(route, frame[0]).x, frame[1]); close(sampleRoute(route, frame[0]).z, frame[2]);
+      const next = route.keyframes[i + 1];
+      for (let j = 1; j < 10; j++) {
+        const pose = sampleRoute(route, frame[0] + (next[0] - frame[0]) * j / 10);
+        const end = i === route.keyframes.length - 2 ? route.keyframes[0] : next;
+        assert.ok(pose.x >= Math.min(frame[1], end[1]) - 1e-8 && pose.x <= Math.max(frame[1], end[1]) + 1e-8);
+        assert.ok(pose.z >= Math.min(frame[2], end[2]) - 1e-8 && pose.z <= Math.max(frame[2], end[2]) + 1e-8);
+      }
+    }
+  }
+});
+
+test('closed routes join with continuous position and heading including the imperfect source seam', () => {
+  const data = JSON.parse(readFileSync('public/models/traffic-routes-v3.json', 'utf8')) as TrafficRoutes;
+  for (const route of data.routes) {
+    const before = sampleRoute(route, route.duration - 1e-6), after = sampleRoute(route, 1e-6);
+    assert.ok(Math.hypot(before.x - after.x, before.z - after.z) < 2e-6);
+    assert.ok(Math.abs(nearestAngle(before.yaw, after.yaw) - before.yaw) < .0001);
+    const reverseTime = sampleRoute(route, -1e-6);
+    close(reverseTime.x, before.x); close(reverseTime.z, before.z);
+  }
+});
+
+test('tail camera can reuse its output object without changing fixed-distance geometry', () => {
+  const result = tailCameraPose(0, 0, 0, 0), eye = result.eye, target = result.target;
+  assert.equal(tailCameraPose(1, .008, 3, .8, result), result);
+  assert.equal(result.eye, eye); assert.equal(result.target, target);
+  close(Math.hypot(result.eye[0] - 1, result.eye[2] - 3), FOLLOW_DISTANCE);
+  close(result.eye[1] - .008, FOLLOW_HEIGHT);
+});

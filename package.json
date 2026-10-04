@@ -10,6 +10,7 @@
     "test": "tsx --test src/app/core/*.test.ts && node scripts/audit-assets.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "optimize:model": "node scripts/optimize-model.mjs",
+    "optimize:gpu": "node scripts/optimize-gpu.mjs",
     "prepare:traffic": "node scripts/prepare-traffic.mjs"
   },
   "dependencies": {

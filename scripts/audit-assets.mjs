@@ -1,7 +1,9 @@
 import { readFile, readdir, stat } from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 
 const assets = [];
+const gpu = JSON.parse(await readFile('public/models/asset-gpu-report.json', 'utf8'));
 for (const name of ['campus-desktop-v2', 'campus-mobile-v2', 'vehicle-desktop-v3', 'vehicle-mobile-v3']) {
   const file = await readFile(`public/models/${name}.glb`);
   assert.equal(file.readUInt32LE(0), 0x46546c67, `${name}: invalid GLB header`);
@@ -12,6 +14,10 @@ for (const name of ['campus-desktop-v2', 'campus-mobile-v2', 'vehicle-desktop-v3
   assert.ok(!/武进|常州|yanglin|taobao|license_plates|files-17/i.test(json), `${name}: legacy identity metadata`);
   assert.ok(file.length < 25 * 1024 * 1024, `${name}: exceeds asset budget`);
   assert.ok(!model.animations?.length, `${name}: static LOD should not contain source animation channels`);
+  const reordered = gpu.assets.find(asset => asset.name === name);
+  assert.equal(createHash('sha256').update(file).digest('hex'), reordered?.sha256, `${name}: GPU asset hash mismatch`);
+  assert.ok(reordered.geometryAndWindingVerified && reordered.textureBytesVerified, `${name}: lossless proof missing`);
+  assert.ok(reordered.cacheMissesAfter <= reordered.cacheMissesBefore, `${name}: cache regression`);
   if (name.startsWith('vehicle')) {
     assert.equal(model.meshes.length, 5, `${name}: body and four rolling wheels must remain separate`);
     assert.equal(model.nodes.filter(node => /vehicle-wheel-\d+$/.test(node.name)).length, 4, `${name}: wheel pivots are missing`);

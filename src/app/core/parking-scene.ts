@@ -51,6 +51,10 @@ export class ParkingScene {
   private follow = false;
   private vehiclePaused = false;
   private vehicleTime = 0;
+  private trafficInitialized = false;
+  private readonly tail = tailCameraPose(0, .008, 0, 0);
+  private readonly tailTarget = new Vector3();
+  private readonly flightTarget = new Vector3();
   private fleet: MovingVehicle[] = [];
   private rig?: VehicleRig;
   private selectedTrafficIndex = 0;
@@ -108,15 +112,15 @@ export class ParkingScene {
     if (this.destroyed) return '';
     const suffix = this.mobile ? 'mobile' : 'desktop';
     onProgress('加载精细园区 · 建筑与道路纹理…');
-    const campus = await ImportMeshAsync(new URL(`models/campus-${suffix}-v2.glb`, document.baseURI).href, scene, {
+    const campus = await ImportMeshAsync(new URL(`models/campus-${suffix}-v2.glb?rev=gpu-cache-1`, document.baseURI).href, scene, {
       onProgress: e => onProgress(e.lengthComputable ? `精细园区 ${Math.round(e.loaded/e.total*100)}%` : '加载精细园区…')
     });
     if (this.destroyed) return '';
-    for (const mesh of campus.meshes) { mesh.isPickable = false; mesh.renderingGroupId=mesh.material?.name.includes('ground')?0:1; mesh.computeWorldMatrix(true); mesh.freezeWorldMatrix(); }
+    for (const mesh of campus.meshes) { mesh.isPickable = false; mesh.renderingGroupId=mesh.material?.name.includes('ground')?0:1; mesh.computeWorldMatrix(true); mesh.freezeWorldMatrix(); mesh.doNotSyncBoundingInfo = true; }
     this.styleMaterials();
     onProgress('实例化精细车辆…');
     const [cars, placementResponse, routeResponse, rigResponse] = await Promise.all([
-      ImportMeshAsync(new URL(`models/vehicle-${suffix}-v3.glb`, document.baseURI).href, scene),
+      ImportMeshAsync(new URL(`models/vehicle-${suffix}-v3.glb?rev=gpu-cache-1`, document.baseURI).href, scene),
       fetch(new URL('models/vehicle-placements-v3.json', document.baseURI)),
       fetch(new URL('models/traffic-routes-v3.json', document.baseURI)),
       fetch(new URL('models/vehicle-rig-v3.json', document.baseURI))
@@ -130,9 +134,11 @@ export class ParkingScene {
       const route = traffic.routes.find(r => r.id === definition.route)!;
       const node = new TransformNode(`moving-vehicle-${i}`, scene);
       node.scaling.setAll(this.rig!.scale);
+      node.rotationQuaternion = Quaternion.Identity();
       const wheels = this.rig!.wheels.map(wheel => {
         const pivot = new TransformNode(`moving-${i}-wheel-${wheel.id}`, scene);
         pivot.parent = node; pivot.position.copyFromFloats(wheel.pivot[0], wheel.pivot[1], wheel.pivot[2]);
+        pivot.rotationQuaternion = Quaternion.Identity();
         return pivot;
       });
       const line = CreateLines(`driving-route-${i}`, { points: route.keyframes.map(f => new Vector3(f[1], .025, f[2])) }, scene);
@@ -164,6 +170,9 @@ export class ParkingScene {
       mesh.isPickable = true; mesh.thinInstanceEnablePicking = true; mesh.metadata = { vehicle: true,parked:true };
       mesh.renderingGroupId=1;
       mesh.thinInstanceSetBuffer('matrix',matrices,16,true);
+      // Aggregate instance bounds are already computed; neither these matrices
+      // nor their identity parent transform change after loading.
+      mesh.computeWorldMatrix(true); mesh.freezeWorldMatrix(); mesh.doNotSyncBoundingInfo = true;
       mesh.alwaysSelectAsActiveMesh = true;
     }
     this.styleMaterials();
@@ -286,6 +295,7 @@ export class ParkingScene {
   }
   private updateVehicle(delta:number) {
     if(!this.fleet.length || !this.rig)return;
+    if(this.vehiclePaused && this.trafficInitialized)return;
     if(!this.vehiclePaused)this.vehicleTime+=delta;
     for (const moving of this.fleet) {
       const pose = sampleRoute(moving.route, moving.offset + this.vehicleTime * moving.speed, moving.yaw);
@@ -293,10 +303,12 @@ export class ParkingScene {
       const distance = moving.previous ? Vector3.Distance(moving.previous, moving.node.position) : 0;
       const wrapped = moving.previousTime !== undefined && pose.time < moving.previousTime;
       if (!wrapped && distance < 1) moving.wheelAngle = rollWheel(moving.wheelAngle, distance, this.rig.wheels[0].radius * this.rig.scale);
-      moving.yaw = pose.yaw; moving.node.rotationQuaternion = Quaternion.RotationAxis(Vector3.Up(), moving.yaw);
-      for (const wheel of moving.wheels) wheel.rotationQuaternion = Quaternion.RotationAxis(Vector3.Right(), moving.wheelAngle);
+      moving.yaw = nearestAngle(moving.yaw, pose.yaw);
+      Quaternion.RotationAxisToRef(Vector3.UpReadOnly, moving.yaw, moving.node.rotationQuaternion!);
+      for (const wheel of moving.wheels) Quaternion.RotationAxisToRef(Vector3.RightReadOnly, moving.wheelAngle, wheel.rotationQuaternion!);
       moving.previous ??= new Vector3(); moving.previous.copyFrom(moving.node.position); moving.previousTime = pose.time;
     }
+    this.trafficInitialized = true;
   }
   private clearCameraInertia() {
     if (!this.camera) return;
@@ -309,12 +321,13 @@ export class ParkingScene {
   }
   private tailPose() {
     const moving = this.fleet[this.selectedTrafficIndex];
-    return tailCameraPose(moving.node.position.x, moving.node.position.y, moving.node.position.z, moving.yaw);
+    return tailCameraPose(moving.node.position.x, moving.node.position.y, moving.node.position.z, moving.yaw, this.tail);
   }
   private applyTailCamera() {
     if (!this.camera || !this.fleet.length) return;
     const pose = this.tailPose();
-    this.camera.setTarget(Vector3.FromArray(pose.target));
+    this.tailTarget.copyFromFloats(pose.target[0], pose.target[1], pose.target[2]);
+    this.camera.setTarget(this.tailTarget, false, true, true);
     this.camera.alpha = pose.alpha; this.camera.beta = pose.beta; this.camera.radius = pose.radius;
     this.clearCameraInertia();
   }
@@ -325,8 +338,8 @@ export class ParkingScene {
     const delta=this.lastFrame?Math.min((now-this.lastFrame)/1000,.1):0;this.lastFrame=now;
     this.updateVehicle(delta);
     if(this.flight){const f=this.flight,t=Math.min(1,(now-f.start)/1050),e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-      if(this.follow){const pose=this.tailPose();f.to=Vector3.FromArray(pose.target);f.alphaTo=nearestAngle(f.alphaFrom,pose.alpha);f.radiusTo=pose.radius;f.betaTo=pose.beta;}
-      this.camera.setTarget(Vector3.Lerp(f.from,f.to,e));this.camera.radius=f.radiusFrom+(f.radiusTo-f.radiusFrom)*e;this.camera.beta=f.betaFrom+(f.betaTo-f.betaFrom)*e;this.camera.alpha=f.alphaFrom+(f.alphaTo-f.alphaFrom)*e;if(t===1)this.flight=undefined;
+      if(this.follow){const pose=this.tailPose();f.to.copyFromFloats(pose.target[0],pose.target[1],pose.target[2]);f.alphaTo=nearestAngle(f.alphaFrom,pose.alpha);f.radiusTo=pose.radius;f.betaTo=pose.beta;}
+      Vector3.LerpToRef(f.from,f.to,e,this.flightTarget);this.camera.setTarget(this.flightTarget,false,true,true);this.camera.radius=f.radiusFrom+(f.radiusTo-f.radiusFrom)*e;this.camera.beta=f.betaFrom+(f.betaTo-f.betaFrom)*e;this.camera.alpha=f.alphaFrom+(f.alphaTo-f.alphaFrom)*e;if(t===1)this.flight=undefined;
     }
     if(this.orbit)this.camera.alpha+=delta*.065;
     if(this.follow&&!this.flight)this.applyTailCamera();
